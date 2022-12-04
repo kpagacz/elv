@@ -1,2 +1,3 @@
 * cache
-* config file
+* current day detection
+* the cli interface

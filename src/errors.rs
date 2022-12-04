@@ -5,6 +5,7 @@ error_chain! {
       Io(std::io::Error);
       HttpRequest(reqwest::Error);
       Url(url::ParseError);
+      Serialize(toml::ser::Error);
   }
   // skip_msg_variant
 }

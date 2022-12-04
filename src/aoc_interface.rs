@@ -1,4 +1,5 @@
 use crate::aoc_domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
+use crate::configuration::Configuration;
 use crate::errors::*;
 use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
@@ -45,8 +46,8 @@ pub fn submit_answer(submission: Submission, http_client: &Client) -> Result<Sub
     let mut body = String::new();
     response.read_to_string(&mut body)?;
 
-    let message: String = parse_submission_answer_body(&body)?;
-    let submission_status: SubmissionStatus = if message.starts_with("That's the right answer!") {
+    let message = parse_submission_answer_body(&body)?;
+    let submission_status = if message.starts_with("That's the right answer!") {
         SubmissionStatus::Correct
     } else {
         SubmissionStatus::Incorrect
@@ -60,13 +61,13 @@ pub fn submit_answer(submission: Submission, http_client: &Client) -> Result<Sub
     ))
 }
 
-pub fn prepare_http_client() -> Client {
-    let cookie = "session=53616c7465645f5f8f822e1a13894b8677436ec2f0ffe81919ea6f9bf9d834f3f44f178b9e3ee690dda579138ef39fbeeb69bf7587cb549cc899ddf7f299879f";
-    let url: Url = "https://adventofcode.com/"
+pub fn prepare_http_client(configuration: &Configuration) -> Client {
+    let cookie = format!("session={}", configuration.aoc.token);
+    let url = "https://adventofcode.com/"
         .parse::<Url>()
         .expect("Invalid URL");
     let jar = Jar::default();
-    jar.add_cookie_str(cookie, &url);
+    jar.add_cookie_str(&cookie, &url);
 
     Client::builder()
         .cookie_provider(Arc::new(jar))
