@@ -1,10 +1,12 @@
-#[derive(Debug, PartialEq)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum RiddlePart {
     One,
     Two,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Submission {
     pub part: RiddlePart,
     pub answer: String,
@@ -23,14 +25,14 @@ impl Submission {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum SubmissionStatus {
     Correct,
     Incorrect,
     Unknown,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct SubmissionResult {
     pub submission: Submission,
     pub status: SubmissionStatus,

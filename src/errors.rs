@@ -5,7 +5,15 @@ error_chain! {
       Io(std::io::Error);
       HttpRequest(reqwest::Error);
       Url(url::ParseError);
-      Serialize(toml::ser::Error);
+      Toml(toml::ser::Error);
+      Cbor(serde_cbor::Error);
+  }
+
+  errors {
+    CacheFailure(reason: String) {
+      description("A cache operation failed")
+      display("A cache operation failed: {}", reason)
+    }
   }
   // skip_msg_variant
 }
