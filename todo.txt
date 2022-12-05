@@ -1,3 +1,2 @@
 * the cli interface
-* parsing the response from adventofcode to search for how much time it should wait
 * different types of response (other than success and invalid answer)

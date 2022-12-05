@@ -26,10 +26,9 @@ pub fn submit_answer(submission: Submission, http_client: &Client) -> Result<Sub
         .post(url)
         .body(format!(
             "level={}&answer={}",
-            if submission.part == RiddlePart::One {
-                1
-            } else {
-                2
+            match submission.part {
+                RiddlePart::One => 1,
+                RiddlePart::Two => 2,
             },
             submission.answer
         ))
@@ -52,12 +51,18 @@ pub fn submit_answer(submission: Submission, http_client: &Client) -> Result<Sub
     } else {
         SubmissionStatus::Incorrect
     };
-    // *TODO* Determine other submission statuses (like Unknown and answer submitted too soon ather the previous one)
+
+    let mut wait_minutes = 0;
+    if submission_status == SubmissionStatus::Incorrect {
+        wait_minutes = extract_wait_time_from_message(&message);
+    }
 
     Ok(SubmissionResult::new(
         submission,
         submission_status,
         message,
+        chrono::Utc::now(),
+        wait_minutes,
     ))
 }
 
@@ -83,12 +88,29 @@ fn aoc_elf_user_agent() -> String {
     format!("{}/{}", pkg_name, pkg_version)
 }
 
+fn get_aoc_answer_selector() -> Selector {
+    Selector::parse("main > article > p").unwrap()
+}
+
+fn extract_wait_time_from_message(message: &str) -> i64 {
+    let please_wait_position = message.find("lease wait ");
+    if please_wait_position == None {
+        0
+    } else {
+        let minutes_position = please_wait_position.unwrap() + 11;
+        let next_space_position = message[minutes_position..].find(" ").unwrap();
+        let minutes = &message[minutes_position..minutes_position + next_space_position];
+        if minutes == "one" {
+            1
+        } else {
+            minutes.parse::<i64>().unwrap_or(0)
+        }
+    }
+}
+
 fn parse_submission_answer_body(body: &str) -> Result<String> {
     let document: Html = Html::parse_document(body);
-    let answer = document
-        .select(&Selector::parse("main > article > p").unwrap())
-        .next()
-        .unwrap();
+    let answer = document.select(&get_aoc_answer_selector()).next().unwrap();
     let answer_text = answer
         .text()
         .collect::<Vec<_>>()
@@ -98,4 +120,23 @@ fn parse_submission_answer_body(body: &str) -> Result<String> {
         .join(" ");
 
     Ok(answer_text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extraction_of_wait_time_from_message1() {
+        let message = "That's not the right answer; your answer is too low. Please wait one minute and try again (you guessed 1).";
+        let wait_time = extract_wait_time_from_message(message);
+        assert_eq!(wait_time, 1);
+    }
+
+    #[test]
+    fn extraction_of_wait_time_from_message2() {
+        let message = "That's not the right answer; your answer is too low. Please wait 2 minutes and try again (you guessed 1).";
+        let wait_time = extract_wait_time_from_message(message);
+        assert_eq!(wait_time, 2);
+    }
 }
