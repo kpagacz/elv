@@ -1,7 +1,8 @@
+use crate::aoc_domain::RiddlePart;
 use crate::errors::*;
 use crate::{
     aoc_domain::{Submission, SubmissionResult},
-    configuration::get_project_directories,
+    configuration::Configuration,
 };
 use error_chain::State;
 use serde::{Deserialize, Serialize};
@@ -48,15 +49,22 @@ impl SubmissionHistory {
         self.submissions.push(submission);
     }
 
-    pub fn can_submit(&self) -> bool {
+    pub fn can_submit(&self, now: chrono::DateTime<chrono::Utc>) -> bool {
         self.submissions.is_empty()
             || self.submissions.last().unwrap().submitted_at
                 + chrono::Duration::minutes(self.submissions.last().unwrap().wait_minutes)
-                < chrono::Utc::now()
+                < now
     }
 
-    pub fn previously_submitted(&self, submission: &Submission) -> bool {
-        self.submissions.iter().any(|s| s.submission.eq(submission))
+    pub fn wait_time(&self, now: chrono::DateTime<chrono::Utc>) -> Option<chrono::Duration> {
+        if self.can_submit(now) {
+            None
+        } else {
+            let remaining = self.submissions.last().unwrap().submitted_at
+                + chrono::Duration::minutes(self.submissions.last().unwrap().wait_minutes)
+                - now;
+            Some(remaining)
+        }
     }
 
     pub fn get_result_for_submission(&self, submission: &Submission) -> Option<&SubmissionResult> {
@@ -86,9 +94,125 @@ impl SubmissionHistory {
         &self.submissions
     }
 
+    pub fn solved(&self, part: &RiddlePart) -> bool {
+        self.submissions
+            .iter()
+            .any(|s| s.submission.part.eq(part) && s.status.eq(&crate::aoc_domain::SubmissionStatus::Correct))
+    }
+
     fn cache_path(year: u16, day: u8) -> std::path::PathBuf {
-        get_project_directories()
+        Configuration::get_project_directories()
             .cache_dir()
             .join(format!("{}-{}", year, day))
+    }
+}
+
+mod tests {
+    use super::*;
+    use crate::aoc_domain::{RiddlePart, SubmissionStatus};
+
+    #[test]
+    fn can_add_submission() {
+        let submission = Submission::new(RiddlePart::One, "7".to_string(), 2020, 1);
+        let submission_result = SubmissionResult::new(
+            submission,
+            SubmissionStatus::Correct,
+            concat!(
+                "That's the right answer! You are one gold star closer to saving your vacation.",
+                " You got rank 1 on this star's leaderboard. [Return to Day 1]"
+            )
+            .to_string(),
+            chrono::Utc::now(),
+            7,
+        );
+        let mut submission_history = SubmissionHistory::new(2020, 1);
+        submission_history.add(submission_result);
+        assert_eq!(submission_history.get_submissions().len(), 1);
+    }
+
+    #[test]
+    fn previously_added_submission_result_can_be_retrieved() {
+        let submission = Submission::new(RiddlePart::One, "7".to_string(), 2020, 1);
+        let submission_result = SubmissionResult::new(
+            submission,
+            SubmissionStatus::Correct,
+            concat!(
+                "That's the right answer! You are one gold star closer to saving your vacation.",
+                " You got rank 1 on this star's leaderboard. [Return to Day 1]"
+            )
+            .to_string(),
+            chrono::Utc::now(),
+            7,
+        );
+        let mut submission_history = SubmissionHistory::new(2020, 1);
+        submission_history.add(submission_result);
+        let new_submission = Submission::new(RiddlePart::One, "7".to_string(), 2020, 1);
+        let retrieved_submission_result =
+            submission_history.get_result_for_submission(&new_submission);
+        assert_eq!(
+            retrieved_submission_result.unwrap().submission,
+            new_submission
+        );
+    }
+
+    #[test]
+    fn get_result_for_submission_returns_none_for_a_new_submission() {
+        let submission = Submission::new(RiddlePart::One, "7".to_string(), 2020, 1);
+        let submission_history = SubmissionHistory::new(2020, 1);
+        assert_eq!(
+            submission_history.get_result_for_submission(&submission),
+            None
+        );
+    }
+
+    #[test]
+    fn can_submit_returns_false_if_submitted_too_soon() {
+        let submission_result = SubmissionResult::new(
+            Submission::new(RiddlePart::One, "7".to_string(), 2020, 1),
+            SubmissionStatus::Correct,
+            concat!(
+                "That's the right answer! You are one gold star closer to saving your vacation.",
+                " You got rank 1 on this star's leaderboard. [Return to Day 1]"
+            )
+            .to_string(),
+            chrono::Utc::now(),
+            7,
+        );
+        let mut submission_history = SubmissionHistory::new(2020, 1);
+        submission_history.add(submission_result);
+        assert_eq!(submission_history.can_submit(chrono::Utc::now()), false);
+    }
+
+    #[test]
+    fn can_submit_if_there_are_no_submissions() {
+        let submission_history = SubmissionHistory::new(2020, 1);
+        assert_eq!(submission_history.can_submit(chrono::Utc::now()), true);
+    }
+
+    #[test]
+    fn test_wait_time() {
+        let now = chrono::Utc::now();
+        let submission_result = SubmissionResult::new(
+            Submission::new(RiddlePart::One, "7".to_string(), 2020, 1),
+            SubmissionStatus::Correct,
+            concat!(
+                "That's the right answer! You are one gold star closer to saving your vacation.",
+                " You got rank 1 on this star's leaderboard. [Return to Day 1]"
+            )
+            .to_string(),
+            now,
+            7,
+        );
+        let mut submission_history = SubmissionHistory::new(2020, 1);
+        submission_history.add(submission_result);
+        assert_eq!(
+            submission_history.wait_time(now + chrono::Duration::minutes(4)),
+            Some(chrono::Duration::minutes(3))
+        );
+
+        assert_eq!(
+            submission_history.wait_time(now + chrono::Duration::minutes(8)),
+            None
+        )
     }
 }
