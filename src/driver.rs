@@ -1,9 +1,10 @@
 use crate::aoc_api::AocApi;
 use crate::aoc_domain::Submission;
 use crate::configuration::Configuration;
+use crate::duration_string::DurationString;
 use crate::submission_history::SubmissionHistory;
 
-const CACHE_ERROR_MESSAGE: &str = concat!(
+const CACHE_SAVE_ERROR_MESSAGE: &str = concat!(
     "Could not save the submission result to the cache and the application will not ",
     "have any memory of this submission.",
     " Please check your permissions.",
@@ -18,8 +19,12 @@ pub struct Driver {
 }
 
 impl Driver {
-    pub fn input(year: u32, day: u8) {
-        let aoc_api = AocApi::default();
+    pub fn new(configuration: Configuration) -> Self {
+        Self { configuration }
+    }
+
+    pub fn input(&self, year: u16, day: u8) {
+        let aoc_api = AocApi::new(&self.configuration);
         let input = aoc_api.get_input(&year, &day).expect(concat!(
             "Could not get input.",
             " Please check your internet connection and make sure you supply an Advent of Code ",
@@ -36,6 +41,7 @@ impl Driver {
         answer: String,
     ) {
         let aoc_api = AocApi::default();
+
         let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(year, day) {
             Ok(c) => Some(c),
             Err(e) => {
@@ -44,10 +50,18 @@ impl Driver {
                 None
             }
         };
+
         let submission = Submission::new(part, answer, year, day);
-        if let Some(ref res) = cache {
-            if let Some(submission_result) = res.get_result_for_submission(&submission) {
+        if let Some(ref cache) = cache {
+            if let Some(submission_result) = cache.get_result_for_submission(&submission) {
                 println!("Your submission result:\n{:?}", submission_result.message);
+                return;
+            }
+        }
+
+        if let Some(ref cache) = cache {
+            if let Some(wait_time) = cache.wait_time(chrono::Utc::now()) {
+                println!("You wanted to submit an answer too soon. Please wait {} before submitting again.", DurationString::new(wait_time));
                 return;
             }
         }
@@ -57,7 +71,7 @@ impl Driver {
                 println!("Your submission result:\n{:?}", res.message);
                 if let Some(ref mut cache) = cache {
                     cache.add(res);
-                    cache.save_to_cache().expect(CACHE_ERROR_MESSAGE);
+                    cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
                 }
             }
             Err(e) => {

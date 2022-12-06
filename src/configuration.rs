@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 use crate::errors::*;
-use config::{Config, Environment, File, FileFormat::Toml};
+use config::{builder::DefaultState, Config, ConfigBuilder, Environment, File, FileFormat::Toml};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AocConfiguration {
@@ -31,12 +31,27 @@ pub struct Configuration {
 
 impl Configuration {
     pub fn new() -> Self {
+        match Self::builder().build() {
+            Ok(config) => config
+                .try_deserialize::<Configuration>()
+                .unwrap_or(Configuration::default()),
+            Err(_) => Configuration::default(),
+        }
+    }
+
+    pub fn builder() -> ConfigBuilder<DefaultState> {
         let project_dirs = Self::get_project_directories();
         if !project_dirs.config_dir().join(".config").exists() {
             if Self::write_default_config().is_err() {
-                return Configuration::default();
+                println!(
+                    "Failed to write the default config to: {}",
+                    project_dirs.config_dir().join(".config").display()
+                );
+                println!("Using default configuration");
+                return ConfigBuilder::default();
             }
         }
+
         let builder = Config::builder()
             .add_source(
                 File::with_name(project_dirs.config_dir().join(".config").to_str().unwrap())
@@ -47,12 +62,7 @@ impl Configuration {
                     .separator("_")
                     .keep_prefix(true),
             );
-        match builder.build() {
-            Ok(config) => config
-                .try_deserialize::<Configuration>()
-                .unwrap_or(Configuration::default()),
-            Err(_) => Configuration::default(),
-        }
+        builder
     }
 
     pub fn get_project_directories() -> ProjectDirs {

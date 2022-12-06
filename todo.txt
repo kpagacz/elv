@@ -1,2 +1,3 @@
 * the cli interface
 * different types of response (other than success and invalid answer)
+* caching inputs

@@ -86,10 +86,6 @@ impl SubmissionHistory {
         Ok(())
     }
 
-    pub fn clear(&mut self) {
-        self.submissions.clear();
-    }
-
     pub fn get_submissions(&self) -> &Vec<SubmissionResult> {
         &self.submissions
     }

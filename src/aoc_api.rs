@@ -8,14 +8,18 @@ use scraper::{Html, Selector};
 use std::io::Read;
 use std::sync::Arc;
 
+const AOC_URL: &str = "https://adventofcode.com";
+
 #[derive(Debug, Default)]
 pub struct AocApi {
     http_client: Client,
 }
 
 impl AocApi {
-    pub fn new(http_client: Client) -> Self {
-        Self { http_client }
+    pub fn new(configuration: &Configuration) -> Self {
+        Self {
+            http_client: Self::prepare_http_client(&configuration),
+        }
     }
 
     pub fn default() -> Self {
@@ -24,8 +28,8 @@ impl AocApi {
         }
     }
 
-    pub fn get_input(self: &Self, year: &u32, day: &u8) -> Result<String> {
-        let url = Url::parse(&format!("https://adventofcode.com/{}/day/{}/input", year, day))?;
+    pub fn get_input(self: &Self, year: &u16, day: &u8) -> Result<String> {
+        let url = Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day))?;
         let mut res = self.http_client.get(url).send()?;
         let mut body = String::new();
         res.read_to_string(&mut body)?;
@@ -35,10 +39,11 @@ impl AocApi {
 
     pub fn submit_answer(self: &Self, submission: Submission) -> Result<SubmissionResult> {
         let url = Url::parse(&format!(
-            "https://adventofcode.com/{}/day/{}/answer",
-            submission.year, submission.day
+            "{}/{}/day/{}/answer",
+            AOC_URL, submission.year, submission.day
         ))?;
-        let mut response = self.http_client
+        let mut response = self
+            .http_client
             .post(url)
             .body(format!(
                 "level={}&answer={}",
@@ -84,9 +89,7 @@ impl AocApi {
 
     fn prepare_http_client(configuration: &Configuration) -> Client {
         let cookie = format!("session={}", configuration.aoc.token);
-        let url = "https://adventofcode.com/"
-            .parse::<Url>()
-            .expect("Invalid URL");
+        let url = AOC_URL.parse::<Url>().expect("Invalid URL");
         let jar = Jar::default();
         jar.add_cookie_str(&cookie, &url);
 
@@ -126,7 +129,10 @@ impl AocApi {
 
     fn parse_submission_answer_body(body: &str) -> Result<String> {
         let document: Html = Html::parse_document(body);
-        let answer = document.select(&Self::get_aoc_answer_selector()).next().unwrap();
+        let answer = document
+            .select(&Self::get_aoc_answer_selector())
+            .next()
+            .unwrap();
         let answer_text = answer
             .text()
             .collect::<Vec<_>>()

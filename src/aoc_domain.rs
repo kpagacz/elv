@@ -1,9 +1,21 @@
+use std::fmt::Display;
+
+use clap::ValueEnum;
 use serde::{Serialize, Deserialize};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ValueEnum)]
 pub enum RiddlePart {
-    One,
+    One = 1,
     Two,
+}
+
+impl Display for RiddlePart {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RiddlePart::One => write!(f, "one"),
+            RiddlePart::Two => write!(f, "two"),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

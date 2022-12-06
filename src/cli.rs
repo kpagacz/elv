@@ -1,2 +1,2 @@
-pub mod app;
-mod commands;
+pub mod cli;
+pub mod cli_command;
