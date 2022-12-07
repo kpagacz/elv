@@ -1,3 +1,5 @@
 * the cli interface
 * different types of response (other than success and invalid answer)
+* disallow stupid answer submissions (you already solved the riddle - no submissions for you, you haven't solved part 1 and want to solve part 2)
 * caching inputs
+* deal with errors using bail!

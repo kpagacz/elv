@@ -2,6 +2,7 @@ use crate::aoc_api::AocApi;
 use crate::aoc_domain::Submission;
 use crate::configuration::Configuration;
 use crate::duration_string::DurationString;
+use crate::input_cache::InputCache;
 use crate::submission_history::SubmissionHistory;
 
 const CACHE_SAVE_ERROR_MESSAGE: &str = concat!(
@@ -24,6 +25,11 @@ impl Driver {
     }
 
     pub fn input(&self, year: u16, day: u8) {
+        let input = InputCache::load(year, day);
+        if input.is_ok() {
+            println!("{}", input.unwrap());
+            return;
+        }
         let aoc_api = AocApi::new(&self.configuration);
         let input = aoc_api.get_input(&year, &day).expect(concat!(
             "Could not get input.",
@@ -31,6 +37,7 @@ impl Driver {
             "session token to this application's configuration."
         ));
         println!("{}", input);
+        InputCache::cache(&input, year, day).expect("Failed to cache the input");
     }
 
     pub fn submit_answer(

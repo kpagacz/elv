@@ -25,7 +25,7 @@ fn main() {
     let mut day = cli.day;
     let mut year = cli.year;
     if day.is_none() || year.is_none() {
-        let now = chrono::Utc::now();
+        let now = chrono::Utc::now() - chrono::Duration::hours(4);
         if day.is_none() {
             day = Some(now.day() as u8);
         }
