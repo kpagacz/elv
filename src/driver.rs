@@ -151,10 +151,4 @@ mod tests {
             );
         }
     }
-
-    #[test]
-    fn test_input_bad_year_and_day() {
-        let driver = Driver::default();
-        driver.input(0, 0);
-    }
 }
