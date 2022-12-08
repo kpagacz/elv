@@ -1,5 +1,9 @@
-use crate::aoc_api::AocApi;
-use crate::aoc_domain::Submission;
+use crate::errors::*;
+use chrono::TimeZone;
+use error_chain::bail;
+
+use crate::aoc_api::{AocApi, ResponseStatus};
+use crate::aoc_domain::{Submission, SubmissionStatus};
 use crate::configuration::Configuration;
 use crate::duration_string::DurationString;
 use crate::input_cache::InputCache;
@@ -25,19 +29,26 @@ impl Driver {
     }
 
     pub fn input(&self, year: u16, day: u8) {
+        if !self
+            .is_input_released_yet(year, day, &chrono::Utc::now())
+            .chain_err(|| "Failed to check if the input is released yet")
+            .unwrap()
+        {
+            println!("The input for this riddle is not released yet.");
+            return;
+        }
+
         let input = InputCache::load(year, day);
         if input.is_ok() {
             println!("{}", input.unwrap());
             return;
         }
         let aoc_api = AocApi::new(&self.configuration);
-        let input = aoc_api.get_input(&year, &day).expect(concat!(
-            "Could not get input.",
-            " Please check your internet connection and make sure you supply an Advent of Code ",
-            "session token to this application's configuration."
-        ));
-        println!("{}", input);
-        InputCache::cache(&input, year, day).expect("Failed to cache the input");
+        let input = aoc_api.get_input(&year, &day);
+        println!("{}", input.body);
+        if input.status == ResponseStatus::Ok {
+            InputCache::cache(&input.body, year, day).expect("Failed to cache the input");
+        }
     }
 
     pub fn submit_answer(
@@ -73,17 +84,77 @@ impl Driver {
             }
         }
 
-        match aoc_api.submit_answer(submission) {
-            Ok(res) => {
-                println!("Your submission result:\n{:?}", res.message);
-                if let Some(ref mut cache) = cache {
-                    cache.add(res);
-                    cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
-                }
-            }
-            Err(e) => {
-                println!("Error: {}", e);
+        let submission_result = aoc_api.submit_answer(submission);
+        if submission_result.is_err() {
+            println!("Error: {}", submission_result.err().unwrap());
+            return;
+        };
+        let submission_result_unwrapped = submission_result.unwrap();
+        println!(
+            "Your submission result:\n{:?}",
+            submission_result_unwrapped.message
+        );
+        if submission_result_unwrapped.status == SubmissionStatus::Correct
+            || submission_result_unwrapped.status == SubmissionStatus::Incorrect
+            || submission_result_unwrapped.status == SubmissionStatus::TooSoon
+        {
+            if let Some(ref mut cache) = cache {
+                cache.add(submission_result_unwrapped);
+                cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
             }
         }
+    }
+
+    fn is_input_released_yet(
+        &self,
+        year: u16,
+        day: u8,
+        now: &chrono::DateTime<chrono::Utc>,
+    ) -> Result<bool> {
+        let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 4)
+            .unwrap()
+            .with_ymd_and_hms(year as i32, 12, day as u32, 0, 0, 0)
+            .single()
+        {
+            None => bail!("Invalid date"),
+            Some(time) => time,
+        };
+
+        Ok(now >= &input_release_time)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_input_released_yet() {
+        let driver = Driver::default();
+        let now = chrono::Utc.with_ymd_and_hms(2022, 12, 1, 4, 0, 0).unwrap();
+        for (year, day, expected) in &[
+            (2019, 1, true),
+            (2020, 1, true),
+            (2021, 1, true),
+            (2022, 1, true),
+            (2022, 2, false),
+            (2023, 1, false),
+            (2024, 1, false),
+        ] {
+            assert_eq!(
+                driver.is_input_released_yet(*year, *day, &now).unwrap(),
+                *expected,
+                "Input for {}-{} should be released: {}",
+                year,
+                day,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_input_bad_year_and_day() {
+        let driver = Driver::default();
+        driver.input(0, 0);
     }
 }

@@ -3,6 +3,7 @@ use crate::configuration::Configuration;
 use crate::errors::*;
 use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
+use reqwest::StatusCode;
 use reqwest::{cookie::Jar, Url};
 use scraper::{Html, Selector};
 use std::io::Read;
@@ -28,13 +29,35 @@ impl AocApi {
         }
     }
 
-    pub fn get_input(self: &Self, year: &u16, day: &u8) -> Result<String> {
-        let url = Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day))?;
-        let mut res = self.http_client.get(url).send()?;
+    pub fn get_input(self: &Self, year: &u16, day: &u8) -> InputResponse {
+        let url = match Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
+            Ok(url) => url,
+            Err(_) => {
+                return InputResponse::new(
+                    "Failed to parse the URL. Are you sure your day and year are correct?"
+                        .to_string(),
+                    ResponseStatus::Error,
+                )
+            }
+        };
+        let mut response = match self.http_client.get(url).send() {
+            Ok(response) => response,
+            Err(_) => return Self::failed_input_request_response(),
+        };
+        if response.status() != StatusCode::OK {
+            return Self::failed_input_request_response();
+        }
         let mut body = String::new();
-        res.read_to_string(&mut body)?;
-
-        Ok(body)
+        if response.read_to_string(&mut body).is_err() {
+            return Self::failed_input_request_response();
+        }
+        if body.starts_with("Please don't repeatedly request this") {
+            return InputResponse::new(
+                "You have to wait for the input to be available".to_string(),
+                ResponseStatus::TooSoon,
+            );
+        }
+        InputResponse::new(body, ResponseStatus::Ok)
     }
 
     pub fn submit_answer(self: &Self, submission: Submission) -> Result<SubmissionResult> {
@@ -69,12 +92,18 @@ impl AocApi {
         let message = Self::parse_submission_answer_body(&body)?;
         let submission_status = if message.starts_with("That's the right answer!") {
             SubmissionStatus::Correct
+        } else if message.starts_with("You gave an answer too recently") {
+            SubmissionStatus::TooSoon
+        } else if message.starts_with("You don't seem to be solving the right level") {
+            SubmissionStatus::WrongLevel
         } else {
             SubmissionStatus::Incorrect
         };
 
         let mut wait_minutes = 0;
-        if submission_status == SubmissionStatus::Incorrect {
+        if submission_status == SubmissionStatus::Incorrect
+            || submission_status == SubmissionStatus::TooSoon
+        {
             wait_minutes = Self::extract_wait_time_from_message(&message);
         }
 
@@ -112,18 +141,17 @@ impl AocApi {
     }
 
     fn extract_wait_time_from_message(message: &str) -> i64 {
-        let please_wait_position = message.find("lease wait ");
-        if please_wait_position == None {
-            0
+        let please_wait_position = match message.find("lease wait ") {
+            Some(position) => position,
+            None => return 0,
+        };
+        let minutes_position = please_wait_position + 11;
+        let next_space_position = message[minutes_position..].find(" ").unwrap();
+        let minutes = &message[minutes_position..minutes_position + next_space_position];
+        if minutes == "one" {
+            1
         } else {
-            let minutes_position = please_wait_position.unwrap() + 11;
-            let next_space_position = message[minutes_position..].find(" ").unwrap();
-            let minutes = &message[minutes_position..minutes_position + next_space_position];
-            if minutes == "one" {
-                1
-            } else {
-                minutes.parse::<i64>().unwrap_or(0)
-            }
+            minutes.parse::<i64>().unwrap_or(0)
         }
     }
 
@@ -142,6 +170,29 @@ impl AocApi {
             .join(" ");
 
         Ok(answer_text)
+    }
+
+    fn failed_input_request_response() -> InputResponse {
+        InputResponse::new("Failed to get input".to_string(), ResponseStatus::Error)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ResponseStatus {
+    Ok,
+    TooSoon,
+    Error,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct InputResponse {
+    pub body: String,
+    pub status: ResponseStatus,
+}
+
+impl InputResponse {
+    pub fn new(body: String, status: ResponseStatus) -> Self {
+        Self { body, status }
     }
 }
 

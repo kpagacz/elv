@@ -42,6 +42,8 @@ pub enum SubmissionStatus {
     Correct,
     Incorrect,
     Unknown,
+    TooSoon,
+    WrongLevel,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

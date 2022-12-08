@@ -3,10 +3,10 @@ mod aoc_domain;
 mod cli;
 mod configuration;
 mod driver;
-mod errors;
-mod submission_history;
 mod duration_string;
+mod errors;
 mod input_cache;
+mod submission_history;
 
 pub use crate::cli::cli::Cli;
 pub use crate::cli::cli_command::CliCommand;
