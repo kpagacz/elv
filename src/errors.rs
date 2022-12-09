@@ -12,7 +12,7 @@ error_chain! {
   errors {
     CacheFailure(reason: String) {
       description("A cache operation failed")
-      display("A cache operation failed: {}", reason)
+      display("{}", reason)
     }
   }
   // skip_msg_variant

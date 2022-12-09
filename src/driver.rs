@@ -39,7 +39,7 @@ impl Driver {
 
         match InputCache::load(year, day) {
             Ok(input) => return Ok(input),
-            Err(_) => println!("Failed loading the input from the cache"),
+            Err(e) => println!("Failed loading the input from the cache, cause: {}", e),
         };
 
         let aoc_api = AocApi::new(&self.configuration);

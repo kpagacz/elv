@@ -14,7 +14,12 @@ impl InputCache {
     pub fn cache(input: &str, year: u16, day: u8) -> Result<()> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
-            std::fs::create_dir_all(cache_path.parent().unwrap())?;
+            std::fs::create_dir_all(cache_path.parent().unwrap()).chain_err(|| {
+                ErrorKind::CacheFailure(format!(
+                    "Failed to create cache directory for {}-{:02}",
+                    year, day
+                ))
+            })?;
         }
         std::fs::write(cache_path, input).chain_err(|| {
             ErrorKind::CacheFailure(format!(
@@ -33,12 +38,12 @@ impl InputCache {
                 year, day
             )));
         }
-        let input = std::fs::read_to_string(cache_path).chain_err(|| {
-            ErrorKind::CacheFailure(format!(
+        match std::fs::read_to_string(cache_path) {
+            Ok(input) => Ok(input),
+            Err(_) => bail!(ErrorKind::CacheFailure(format!(
                 "Failed to read cached input for {}-{:02}",
                 year, day
-            ))
-        })?;
-        Ok(input)
+            ))),
+        }
     }
 }
