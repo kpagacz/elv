@@ -28,27 +28,30 @@ impl Driver {
         Self { configuration }
     }
 
-    pub fn input(&self, year: u16, day: u8) {
-        if !self
-            .is_input_released_yet(year, day, &chrono::Utc::now())
-            .chain_err(|| "Failed to check if the input is released yet")
-            .unwrap()
-        {
-            println!("The input for this riddle is not released yet.");
-            return;
+    pub fn input(&self, year: u16, day: u8) -> Result<String> {
+        let is_already_released = match self.is_input_released_yet(year, day, &chrono::Utc::now()) {
+            Ok(released) => released,
+            Err(e) => bail!(Error::with_chain(e, "Failed to check if the input is released yet")),
+        };
+        if !is_already_released {
+            bail!("The input is not released yet");
         }
 
-        let input = InputCache::load(year, day);
-        if input.is_ok() {
-            println!("{}", input.unwrap());
-            return;
-        }
+        match InputCache::load(year, day) {
+            Ok(input) => return Ok(input),
+            Err(_) => println!("Failed loading the input from the cache"),
+        };
+
         let aoc_api = AocApi::new(&self.configuration);
         let input = aoc_api.get_input(&year, &day);
-        println!("{}", input.body);
         if input.status == ResponseStatus::Ok {
-            InputCache::cache(&input.body, year, day).expect("Failed to cache the input");
+            if InputCache::cache(&input.body, year, day).is_err() {
+                println!("Failed saving the input to the cache");
+            }
+        } else {
+            bail!("Failed to get the input: {}", input.body);
         }
+        Ok(input.body)
     }
 
     pub fn submit_answer(
@@ -101,6 +104,10 @@ impl Driver {
             if let Some(ref mut cache) = cache {
                 cache.add(submission_result_unwrapped);
                 cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
+            } else {
+                let mut cache = SubmissionHistory::new(year, day);
+                cache.add(submission_result_unwrapped);
+                cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
             }
         }
     }
@@ -150,5 +157,18 @@ mod tests {
                 expected
             );
         }
+    }
+
+    #[test]
+    fn test_invalid_date_to_input() {
+        let driver = Driver::default();
+        let input = driver.input(0, 0);
+        assert!(input.is_err());
+        let error = input.err().unwrap();
+        assert!(
+            error.description() == "Failed to check if the input is released yet",
+            "Error message should be 'Failed to check if the input is released yet', was: {}",
+            error.description()
+        );
     }
 }

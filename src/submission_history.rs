@@ -1,4 +1,3 @@
-use crate::aoc_domain::RiddlePart;
 use crate::errors::*;
 use crate::{
     aoc_domain::{Submission, SubmissionResult},
@@ -18,14 +17,6 @@ impl SubmissionHistory {
     pub fn new(year: u16, day: u8) -> Self {
         SubmissionHistory {
             submissions: Vec::new(),
-            year,
-            day,
-        }
-    }
-
-    pub fn from(submissions: Vec<SubmissionResult>, year: u16, day: u8) -> Self {
-        SubmissionHistory {
-            submissions,
             year,
             day,
         }
@@ -86,16 +77,6 @@ impl SubmissionHistory {
         Ok(())
     }
 
-    pub fn get_submissions(&self) -> &Vec<SubmissionResult> {
-        &self.submissions
-    }
-
-    pub fn solved(&self, part: &RiddlePart) -> bool {
-        self.submissions
-            .iter()
-            .any(|s| s.submission.part.eq(part) && s.status.eq(&crate::aoc_domain::SubmissionStatus::Correct))
-    }
-
     fn cache_path(year: u16, day: u8) -> std::path::PathBuf {
         Configuration::get_project_directories()
             .cache_dir()
@@ -103,9 +84,10 @@ impl SubmissionHistory {
     }
 }
 
+#[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::aoc_domain::{RiddlePart, SubmissionStatus};
+    use super::SubmissionHistory;
+    use crate::aoc_domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 
     #[test]
     fn can_add_submission() {
@@ -123,7 +105,7 @@ mod tests {
         );
         let mut submission_history = SubmissionHistory::new(2020, 1);
         submission_history.add(submission_result);
-        assert_eq!(submission_history.get_submissions().len(), 1);
+        assert_eq!(submission_history.submissions.len(), 1);
     }
 
     #[test]

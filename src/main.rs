@@ -36,9 +36,16 @@ fn main() {
 
     let driver = Driver::new(configuration);
     match cli.command {
-        CliCommand::Input => driver.input(year.unwrap(), day.unwrap()),
+        CliCommand::Input => handle_input_command(&driver, year.unwrap(), day.unwrap()),
         CliCommand::Submit { part, answer } => {
             driver.submit_answer(year.unwrap(), day.unwrap(), part, answer)
+        }
+    }
+
+    fn handle_input_command(driver: &Driver, year: u16, day: u8) {
+        match driver.input(year, day) {
+            Ok(input) => println!("{}", input),
+            Err(e) => println!("Error: {}", e.description()),
         }
     }
 }
