@@ -1,13 +1,32 @@
+use std::path::{PathBuf, Path};
+
 #[derive(Debug, clap::Subcommand)]
 pub enum CliCommand {
     /// Get the input for the challenge
     ///
-    /// This command will download the input for the challenge and print it to
-    /// the console (stdout). If the input has already been downloaded, it will
-    /// be printed from the cache. If the input has not been downloaded, it will
-    /// be downloaded and then printed. The input will be cached in the
-    /// application's cache directory.
-    Input,
+    /// This command will download the input for the challenge and write it to
+    /// a file. The default file name is "input". If the input has already
+    /// been downloaded, it will be printed from the cache. If the input
+    /// has not been downloaded, it will be downloaded and then printed.
+    /// The input will be cached in the application's cache directory.
+    Input {
+        /// The input will be written to the file with this name
+        #[arg(
+            short,
+            long,
+            default_value = "input",
+            conflicts_with = "no_file"
+        )]
+        out: PathBuf,
+
+        /// Suppresses writing to the file
+        #[arg(short, long, default_value = "false", conflicts_with = "out")]
+        no_file: bool,
+
+        /// Prints the input to stdout as well as writing it to a file
+        #[arg(short, long, default_value = "false")]
+        print: bool,
+    },
 
     /// Submit an answer to the challenge
     ///

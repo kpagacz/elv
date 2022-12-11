@@ -1,6 +1,8 @@
-use elv::{CliCommand, CliInterface, Configuration, Driver};
+use std::{io::Write, path::PathBuf};
+
 use chrono::Datelike;
 use clap::Parser;
+use elv::{CliCommand, CliInterface, Configuration, Driver};
 
 fn main() {
     let cli = CliInterface::parse();
@@ -36,16 +38,33 @@ fn main() {
 
     let driver = Driver::new(configuration);
     match cli.command {
-        CliCommand::Input => handle_input_command(&driver, year.unwrap(), day.unwrap()),
+        CliCommand::Input {
+            out,
+            no_file,
+            print,
+        } => handle_input_command(&driver, year.unwrap(), day.unwrap(), out, no_file, print),
         CliCommand::Submit { part, answer } => {
             driver.submit_answer(year.unwrap(), day.unwrap(), part, answer)
         }
         CliCommand::ClearCache => handle_clear_cache_command(&driver),
     }
 
-    fn handle_input_command(driver: &Driver, year: u16, day: u8) {
+    fn handle_input_command(
+        driver: &Driver,
+        year: u16,
+        day: u8,
+        out: PathBuf,
+        no_file: bool,
+        print: bool,
+    ) {
         match driver.input(year, day) {
-            Ok(input) => println!("{}", input),
+            Ok(input) => {
+                if print { println!("{}", input); }
+                if !no_file {
+                    let mut file = std::fs::File::create(out).expect("Failed to create file");
+                    file.write_all(input.as_bytes()).expect("Failed to write to file");
+                }
+            }
             Err(e) => println!("Error: {}", e.description()),
         }
     }
