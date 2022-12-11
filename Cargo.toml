@@ -1,9 +1,16 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
-name = "aoc-elf"
+name = "elv"
+description = "A little CLI helper for Advent of Code."
 version = "0.1.0"
 edition = "2021"
 readme = "README.md"
+license-file = "LICENSE"
+homepage = "https://github.com/kpagacz/elv"
+repository = "https://github.com/kpagacz/elv"
+keywords = ["advent of code", "aoc", "cli", "cache", "cookie", "helper", "rust"]
+categories = ["command-line-utilities"]
+
 
 [[bin]]
 name = "elv"
