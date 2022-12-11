@@ -8,6 +8,7 @@ impl InputCache {
     fn cache_path(year: u16, day: u8) -> std::path::PathBuf {
         Configuration::get_project_directories()
             .cache_dir()
+            .join("inputs")
             .join(format!("input-{}-{:02}", year, day))
     }
 
@@ -45,5 +46,55 @@ impl InputCache {
                 year, day
             ))),
         }
+    }
+
+    pub fn clear() -> Result<()> {
+        let binding = Configuration::get_project_directories();
+        let cache_dir = binding.cache_dir().join("inputs");
+        if cache_dir.exists() {
+            std::fs::remove_dir_all(cache_dir).chain_err(|| {
+                ErrorKind::CacheFailure("Failed to remove the cache directory".to_string())
+            })?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::InputCache;
+    use crate::errors::*;
+
+    #[test]
+    fn can_cache_input() -> Result<()> {
+        let input = "test input";
+        let year = 1000;
+        let day = 1;
+        InputCache::cache(input, year, day)?;
+        let cached_input = InputCache::load(year, day)?;
+        assert_eq!(input, cached_input);
+        Ok(())
+    }
+
+    #[test]
+    fn can_clear_cache() -> Result<()> {
+        let input = "test input";
+        let year = 1000;
+        let day = 2;
+        InputCache::cache(input, year, day)?;
+        let cached_input = InputCache::load(year, day)?;
+        assert_eq!(input, cached_input);
+        InputCache::clear()?;
+        assert!(InputCache::load(year, day).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn can_clear_cache_with_no_cache() -> Result<()> {
+        let year = 1000;
+        let day = 3;
+        InputCache::clear()?;
+        assert!(InputCache::load(year, day).is_err());
+        Ok(())
     }
 }

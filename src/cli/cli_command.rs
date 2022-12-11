@@ -27,4 +27,11 @@ pub enum CliCommand {
         /// Your answer to the challenge. This argument is required.
         answer: String,
     },
+
+    /// Clears the cache
+    ///
+    /// This command will clear the cache of the application. The cache is used
+    /// to store the input and the results of submissions. This command will
+    /// delete the cache directories and all of their contents.
+    ClearCache,
 }

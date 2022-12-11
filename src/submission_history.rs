@@ -80,9 +80,25 @@ impl SubmissionHistory {
         Ok(())
     }
 
+    pub fn clear() -> Result<()> {
+        let cache_dir = Configuration::get_project_directories()
+            .cache_dir()
+            .join("submissions");
+        if cache_dir.exists() {
+            std::fs::remove_dir_all(&cache_dir).chain_err(|| {
+                ErrorKind::CacheFailure(format!(
+                    "Failed to remove cache directory: {}",
+                    cache_dir.display()
+                ))
+            })?
+        }
+        Ok(())
+    }
+
     fn cache_path(year: u16, day: u8) -> std::path::PathBuf {
         Configuration::get_project_directories()
             .cache_dir()
+            .join("submissions")
             .join(format!("{}-{}", year, day))
     }
 }

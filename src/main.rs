@@ -40,11 +40,19 @@ fn main() {
         CliCommand::Submit { part, answer } => {
             driver.submit_answer(year.unwrap(), day.unwrap(), part, answer)
         }
+        CliCommand::ClearCache => handle_clear_cache_command(&driver),
     }
 
     fn handle_input_command(driver: &Driver, year: u16, day: u8) {
         match driver.input(year, day) {
             Ok(input) => println!("{}", input),
+            Err(e) => println!("Error: {}", e.description()),
+        }
+    }
+
+    fn handle_clear_cache_command(driver: &Driver) {
+        match driver.clear_cache() {
+            Ok(_) => println!("Cache cleared"),
             Err(e) => println!("Error: {}", e.description()),
         }
     }

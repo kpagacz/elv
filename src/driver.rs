@@ -115,6 +115,12 @@ impl Driver {
         }
     }
 
+    pub fn clear_cache(&self) -> Result<()> {
+        InputCache::clear().chain_err(|| "Failed to clear the input cache")?;
+        SubmissionHistory::clear().chain_err(|| "Failed to clear the submission history cache")?;
+        Ok(())
+    }
+
     fn is_input_released_yet(
         &self,
         year: u16,
