@@ -126,7 +126,7 @@ impl AocApi {
             .cookie_provider(Arc::new(jar))
             .user_agent(Self::aoc_elf_user_agent())
             .build()
-            .chain_err((|| "Failed to create HTTP client"))
+            .chain_err(|| "Failed to create HTTP client")
             .unwrap()
     }
 
