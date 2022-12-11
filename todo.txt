@@ -5,3 +5,4 @@ only main prints anything as the interface, the rest just passes values
 * readmes!
 * clear input cache
 * clear submission cache
+* add an option to write input to file, make outputting to std out optional
