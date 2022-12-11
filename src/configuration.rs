@@ -34,22 +34,22 @@ impl Configuration {
         match Self::builder().build() {
             Ok(config) => config
                 .try_deserialize::<Configuration>()
-                .unwrap_or(Configuration::default()),
+                .unwrap_or_default(),
             Err(_) => Configuration::default(),
         }
     }
 
     pub fn builder() -> ConfigBuilder<DefaultState> {
         let project_dirs = Self::get_project_directories();
-        if !project_dirs.config_dir().join(".config").exists() {
-            if Self::write_default_config().is_err() {
-                println!(
-                    "Failed to write the default config to: {}",
-                    project_dirs.config_dir().join(".config").display()
-                );
-                println!("Using default configuration");
-                return ConfigBuilder::default();
-            }
+        if !project_dirs.config_dir().join(".config").exists()
+            && Self::write_default_config().is_err()
+        {
+            println!(
+                "Failed to write the default config to: {}",
+                project_dirs.config_dir().join(".config").display()
+            );
+            println!("Using default configuration");
+            return ConfigBuilder::default();
         }
 
         let builder = Config::builder()

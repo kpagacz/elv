@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
 use clap::ValueEnum;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ValueEnum)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
 pub enum RiddlePart {
     One = 1,
     Two,
@@ -18,7 +18,7 @@ impl Display for RiddlePart {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Submission {
     pub part: RiddlePart,
     pub answer: String,
@@ -37,7 +37,7 @@ impl Submission {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SubmissionStatus {
     Correct,
     Incorrect,
@@ -46,7 +46,7 @@ pub enum SubmissionStatus {
     WrongLevel,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SubmissionResult {
     pub submission: Submission,
     pub status: SubmissionStatus,
@@ -59,7 +59,13 @@ pub struct SubmissionResult {
 }
 
 impl SubmissionResult {
-    pub fn new(submission: Submission, status: SubmissionStatus, message: String, submitted_at: chrono::DateTime<chrono::Utc>, wait_minutes: i64) -> Self {
+    pub fn new(
+        submission: Submission,
+        status: SubmissionStatus,
+        message: String,
+        submitted_at: chrono::DateTime<chrono::Utc>,
+        wait_minutes: i64,
+    ) -> Self {
         SubmissionResult {
             submission,
             status,

@@ -4,7 +4,7 @@ use super::cli_command::CliCommand;
 /// Your Advent of Code CLI
 ///
 /// This CLI is a tool to help you with your Advent of Code challenges.
-pub struct Cli {
+pub struct CliInterface {
     #[arg(short, long)]
     /// Your Advent of Code session token
     ///

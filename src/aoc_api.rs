@@ -19,7 +19,7 @@ pub struct AocApi {
 impl AocApi {
     pub fn new(configuration: &Configuration) -> Self {
         Self {
-            http_client: Self::prepare_http_client(&configuration),
+            http_client: Self::prepare_http_client(configuration),
         }
     }
 
@@ -29,7 +29,7 @@ impl AocApi {
         }
     }
 
-    pub fn get_input(self: &Self, year: &u16, day: &u8) -> InputResponse {
+    pub fn get_input(&self, year: &u16, day: &u8) -> InputResponse {
         let url = match Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
             Ok(url) => url,
             Err(_) => {
@@ -60,7 +60,7 @@ impl AocApi {
         InputResponse::new(body, ResponseStatus::Ok)
     }
 
-    pub fn submit_answer(self: &Self, submission: Submission) -> Result<SubmissionResult> {
+    pub fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult> {
         let url = Url::parse(&format!(
             "{}/{}/day/{}/answer",
             AOC_URL, submission.year, submission.day
@@ -146,7 +146,7 @@ impl AocApi {
             None => return 0,
         };
         let minutes_position = please_wait_position + 11;
-        let next_space_position = message[minutes_position..].find(" ").unwrap();
+        let next_space_position = message[minutes_position..].find(' ').unwrap();
         let minutes = &message[minutes_position..minutes_position + next_space_position];
         if minutes == "one" {
             1
@@ -177,14 +177,14 @@ impl AocApi {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ResponseStatus {
     Ok,
     TooSoon,
     Error,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct InputResponse {
     pub body: String,
     pub status: ResponseStatus,

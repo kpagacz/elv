@@ -8,7 +8,7 @@ mod errors;
 mod input_cache;
 mod submission_history;
 
-pub use crate::cli::cli::Cli;
 pub use crate::cli::cli_command::CliCommand;
+pub use crate::cli::cli_interface::CliInterface;
 pub use crate::configuration::Configuration;
 pub use crate::driver::Driver;

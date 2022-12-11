@@ -31,7 +31,10 @@ impl Driver {
     pub fn input(&self, year: u16, day: u8) -> Result<String> {
         let is_already_released = match self.is_input_released_yet(year, day, &chrono::Utc::now()) {
             Ok(released) => released,
-            Err(e) => bail!(Error::with_chain(e, "Failed to check if the input is released yet")),
+            Err(e) => bail!(Error::with_chain(
+                e,
+                "Failed to check if the input is released yet"
+            )),
         };
         if !is_already_released {
             bail!("The input is not released yet");

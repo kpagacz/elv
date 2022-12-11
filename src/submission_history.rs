@@ -30,12 +30,15 @@ impl SubmissionHistory {
                 State::default(),
             ));
         }
-        let content = std::fs::read(cache_path)?;
-        serde_cbor::from_slice::<SubmissionHistory>(&content).or(Err(ErrorKind::CacheFailure(
-            "Failed to deserialize cache".to_string(),
-        )
-        .into()))
+        let content = std::fs::read(&cache_path)?;
+        serde_cbor::from_slice::<SubmissionHistory>(&content).chain_err(|| {
+            ErrorKind::CacheFailure(format!(
+                "Failed to deserialize cache file: {}",
+                cache_path.display()
+            ))
+        })
     }
+
     pub fn add(&mut self, submission: SubmissionResult) {
         self.submissions.push(submission);
     }
@@ -158,13 +161,13 @@ mod tests {
         );
         let mut submission_history = SubmissionHistory::new(2020, 1);
         submission_history.add(submission_result);
-        assert_eq!(submission_history.can_submit(chrono::Utc::now()), false);
+        assert!(!submission_history.can_submit(chrono::Utc::now()));
     }
 
     #[test]
     fn can_submit_if_there_are_no_submissions() {
         let submission_history = SubmissionHistory::new(2020, 1);
-        assert_eq!(submission_history.can_submit(chrono::Utc::now()), true);
+        assert!(submission_history.can_submit(chrono::Utc::now()));
     }
 
     #[test]

@@ -86,6 +86,7 @@ Despite the fact we have not provided the value for the `--token` parameter,
    home directory.
 
 ### How can I get the value of the session token?
+
 The session token is sent to your http client (usually your browser) as a cookie,
 when you log into the Advent of Code web page. The easiest way to get the value
 of a cookie is using your browser's built-in inspection tools. Look for a way

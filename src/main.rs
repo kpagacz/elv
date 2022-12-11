@@ -1,9 +1,9 @@
-use aoc_elf::{Cli, CliCommand, Configuration, Driver};
+use aoc_elf::{CliCommand, CliInterface, Configuration, Driver};
 use chrono::Datelike;
 use clap::Parser;
 
 fn main() {
-    let cli = Cli::parse();
+    let cli = CliInterface::parse();
 
     let configuration: Configuration;
     if let Some(token) = cli.token {
