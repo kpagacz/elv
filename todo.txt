@@ -1,0 +1,7 @@
+* the wait time is global (but this is not such a big deal... because I still cache the too soon responses, so only one additional call per a riddle)
+* github ci/cd
+* improve the compartmentalization of responsibilities between the main, driver and the aoc api (the driver should return Result<> and everything should be silent until the main)
+only main prints anything as the interface, the rest just passes values
+* clear input cache
+* clear submission cache
+* add an option to write input to file, make outputting to std out optional
