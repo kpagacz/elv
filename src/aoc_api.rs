@@ -10,6 +10,7 @@ use std::io::Read;
 use std::sync::Arc;
 
 const AOC_URL: &str = "https://adventofcode.com";
+const TERM_WIDTH: usize = 120;
 
 #[derive(Debug, Default)]
 pub struct AocApi {
@@ -161,15 +162,11 @@ impl AocApi {
         let answer = document
             .select(&Self::get_aoc_answer_selector())
             .next()
-            .unwrap();
-        let answer_text = answer
-            .text()
-            .collect::<Vec<_>>()
-            .iter()
-            .map(|&s| s.trim())
-            .collect::<Vec<_>>()
-            .join(" ");
-
+            .chain_err(|| "Failed to parse the answer")?;
+        let answer_text = html2text::from_read(
+            answer.text().collect::<Vec<_>>().join("").as_bytes(),
+            TERM_WIDTH,
+        );
         Ok(answer_text)
     }
 
@@ -213,5 +210,39 @@ mod tests {
         let message = "That's not the right answer; your answer is too low. Please wait 2 minutes and try again (you guessed 1).";
         let wait_time = AocApi::extract_wait_time_from_message(message);
         assert_eq!(wait_time, 2);
+    }
+
+    #[test]
+    fn test_parse_submission_answer_body() {
+        let body = r#"
+        <main>
+<article><p>That's the right answer!  You
+ are <span class="day-success">one gold star</span> closer to saving your
+ vacation. <a href="/2020/day/1#part2">[Continue to Part Two]</a></p></article>
+</main>"#;
+
+        let message = AocApi::parse_submission_answer_body(body).unwrap();
+        assert_eq!(message, "That's the right answer! You are one gold star closer to saving your vacation. [Continue to Part Two]\n");
+    }
+
+    #[test]
+    fn test_parse_submission_answer_body2() {
+        let body = r#"
+        <main>
+        <article><p>That's not the right answer.
+        If you're stuck, make sure you're using the full input data; there are also some general tips on the
+        <a href="/2020/about">about page</a>, or you can ask for hints on the <a href="https://www.reddit.com/r/adventofcode/"
+        target="_blank">subreddit</a>.  Because you have guessed incorrectly 7 times on this puzzle,
+        please wait 10 minutes before trying again. (You guessed <span style="white-space:nowrap;"><code>0</code>.)</span>
+        <a href="/2020/day/1">[Return to Day 1]</a></p></article>
+        </main>
+        "#;
+
+        let message = AocApi::parse_submission_answer_body(body).unwrap();
+        assert_eq!(message, concat!(
+            "That's not the right answer. If you're stuck, make sure you're using the full input data; there are also some general\n",
+            "tips on the about page, or you can ask for hints on the subreddit. ",
+            "Because you have guessed incorrectly 7 times on this\npuzzle, please ",
+            "wait 10 minutes before trying again. (You guessed 0.) [Return to Day 1]\n"))
     }
 }

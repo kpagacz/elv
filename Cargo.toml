@@ -31,3 +31,4 @@ chrono = { version = "0.4.23", features = ["serde"] }
 lazy_static = "1.4.0"
 regex = "1.5.4"
 clap = { version = "4.0.29", features = ["derive"] }
+html2text = "0.4.4"

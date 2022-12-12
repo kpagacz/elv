@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::{PathBuf};
 
 #[derive(Debug, clap::Subcommand)]
 pub enum CliCommand {

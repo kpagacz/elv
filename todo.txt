@@ -2,4 +2,7 @@
 * github ci/cd
 * improve the compartmentalization of responsibilities between the main, driver and the aoc api (the driver should return Result<> and everything should be silent until the main)
 only main prints anything as the interface, the rest just passes values
-* add an option to write input to file, make outputting to std out optional
+* improve the output of the application - nice icons, logs that are friendly etc...
+* output the submission answers nicely (html2text or something)
+* revise error handling...
+* add downloading the riddle description
