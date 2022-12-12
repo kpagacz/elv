@@ -1,6 +1,7 @@
 use crate::aoc_domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 use crate::configuration::Configuration;
 use crate::errors::*;
+use error_chain::bail;
 use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
 use reqwest::StatusCode;
@@ -21,12 +22,6 @@ impl AocApi {
     pub fn new(configuration: &Configuration) -> Self {
         Self {
             http_client: Self::prepare_http_client(configuration),
-        }
-    }
-
-    pub fn default() -> Self {
-        Self {
-            http_client: Self::prepare_http_client(&Configuration::new()),
         }
     }
 
@@ -87,6 +82,13 @@ impl AocApi {
                 ),
             )
             .send()?;
+        if !response.status().is_success() {
+            bail!(
+                "Failed to submit the answer. Status code: {}",
+                response.status()
+            );
+        }
+
         let mut body = String::new();
         response.read_to_string(&mut body)?;
 
@@ -114,6 +116,43 @@ impl AocApi {
             message,
             chrono::Utc::now(),
             wait_minutes,
+        ))
+    }
+
+    /// Queries the Advent of Code website for the description of a riddle
+    /// for a given day and year and returns it as a formatted string.
+    pub fn get_description(&self, year: &u16, day: &u8) -> Result<String> {
+        let url = Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))
+            .chain_err(|| "Failed to form the url for the description")?;
+        let mut response = self
+            .http_client
+            .get(url)
+            .send()
+            .chain_err(|| "Failed to send the request for the description")?;
+
+        if !response.status().is_success() {
+            bail!(
+                "Failed to get the description. Status code: {}",
+                response.status()
+            );
+        }
+
+        let mut body = String::new();
+        response
+            .read_to_string(&mut body)
+            .chain_err(|| "Failed to read the response body")?;
+
+        println!("body: {}", body);
+        let description_selector = Selector::parse(".day-desc").unwrap();
+        let description = Html::parse_document(&body)
+            .select(&description_selector)
+            .map(|e| e.inner_html())
+            .collect::<Vec<_>>()
+            .join("\n");
+        Ok(html2text::from_read_with_decorator(
+            description.as_bytes(),
+            TERM_WIDTH,
+            html2text::render::text_renderer::TrivialDecorator::new(),
         ))
     }
 

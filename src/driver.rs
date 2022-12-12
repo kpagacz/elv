@@ -64,7 +64,7 @@ impl Driver {
         part: crate::aoc_domain::RiddlePart,
         answer: String,
     ) {
-        let aoc_api = AocApi::default();
+        let aoc_api = AocApi::new(&self.configuration);
 
         let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(year, day) {
             Ok(c) => Some(c),
@@ -119,6 +119,12 @@ impl Driver {
         InputCache::clear().chain_err(|| "Failed to clear the input cache")?;
         SubmissionHistory::clear().chain_err(|| "Failed to clear the submission history cache")?;
         Ok(())
+    }
+
+    /// Returns the description of the riddles
+    pub fn get_description(&self, year: u16, day: u8) -> Result<String> {
+        let aoc_api = AocApi::new(&self.configuration);
+        Ok(aoc_api.get_description(&year, &day)?)
     }
 
     fn is_input_released_yet(

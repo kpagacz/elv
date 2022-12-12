@@ -1,4 +1,4 @@
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, clap::Subcommand)]
 pub enum CliCommand {
@@ -9,14 +9,10 @@ pub enum CliCommand {
     /// been downloaded, it will be printed from the cache. If the input
     /// has not been downloaded, it will be downloaded and then printed.
     /// The input will be cached in the application's cache directory.
+    #[command(visible_aliases = ["i"])]
     Input {
         /// The input will be written to the file with this name
-        #[arg(
-            short,
-            long,
-            default_value = "input",
-            conflicts_with = "no_file"
-        )]
+        #[arg(short, long, default_value = "input", conflicts_with = "no_file")]
         out: PathBuf,
 
         /// Suppresses writing to the file
@@ -35,6 +31,7 @@ pub enum CliCommand {
     /// Otherwise, the answer will be submitted and the result will be printed.
     /// The result of the submission will be cached in the application's cache
     /// directory.
+    #[command(visible_aliases = ["s"])]
     Submit {
         /// The part of the challenge
         ///
@@ -53,4 +50,11 @@ pub enum CliCommand {
     /// to store the input and the results of submissions. This command will
     /// delete the cache directories and all of their contents.
     ClearCache,
+
+    /// Get the description of the challenge
+    ///
+    /// This command will download the description of the challenge and write it to
+    /// the console.
+    #[command(visible_aliases = ["desc", "d"])]
+    Description,
 }

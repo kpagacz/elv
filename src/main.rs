@@ -47,6 +47,7 @@ fn main() {
             driver.submit_answer(year.unwrap(), day.unwrap(), part, answer)
         }
         CliCommand::ClearCache => handle_clear_cache_command(&driver),
+        CliCommand::Description => handle_description_command(&driver, year.unwrap(), day.unwrap()),
     }
 
     fn handle_input_command(
@@ -59,10 +60,13 @@ fn main() {
     ) {
         match driver.input(year, day) {
             Ok(input) => {
-                if print { println!("{}", input); }
+                if print {
+                    println!("{}", input);
+                }
                 if !no_file {
                     let mut file = std::fs::File::create(out).expect("Failed to create file");
-                    file.write_all(input.as_bytes()).expect("Failed to write to file");
+                    file.write_all(input.as_bytes())
+                        .expect("Failed to write to file");
                 }
             }
             Err(e) => println!("Error: {}", e.description()),
@@ -72,6 +76,13 @@ fn main() {
     fn handle_clear_cache_command(driver: &Driver) {
         match driver.clear_cache() {
             Ok(_) => println!("Cache cleared"),
+            Err(e) => println!("Error: {}", e.description()),
+        }
+    }
+
+    fn handle_description_command(driver: &Driver, year: u16, day: u8) {
+        match driver.get_description(year, day) {
+            Ok(description) => println!("{}", description),
             Err(e) => println!("Error: {}", e.description()),
         }
     }

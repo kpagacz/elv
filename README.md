@@ -10,8 +10,10 @@ their answers to it.
 `elv` helps you interact with with Advent of Code via your terminal instead of the webpage. So far
 `elv` supports:
 
+- downloading riddles' description
 - downloading a riddle's input for a given year and day
 - submitting answers to a riddle
+- caching `AoC` responses whenever possible, so you minimize your footprint on `AoC`'s servers
 
 ## Installation
 
@@ -31,11 +33,34 @@ for about a month, so remember to get another one, once the old one expires.
 
 If you do not get the session token, you will not be able to interact with Advent of Code API using `elv`.
 
+### Downloading the description
+
+#### Getting today's riddle description
+
+This works only while the event is being held, not all the time of the year.
+While the event is not held, you need to specify the year and day of the
+challenge explicitly using `-y` and `-d` parameters.
+
+```bash
+elv -t <YOUR SESSION TOKEN> desc
+```
+
+#### Getting description of a particular riddle
+
+You specify the day and the year of the riddle.
+
+```bash
+elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 desc
+# Prints the description of the riddle published on the first of December 2021
+```
+
 ### Downloading the input
 
 #### Getting today's riddle input
 
 This works only while the event is being held, not all the time of the year.
+While the event is not held, you need to specify the year and day of the
+challenge explicitly using `-y` and `-d` parameters.
 
 ```bash
 elv -t <YOUR SESSION TOKEN> input
