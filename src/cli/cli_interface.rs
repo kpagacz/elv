@@ -1,7 +1,7 @@
 use super::cli_command::CliCommand;
 
 #[derive(Debug, clap::Parser)]
-/// Your Advent of Code CLI
+/// 🎄 Your Advent of Code CLI 🎄
 ///
 /// This CLI is a tool to help you with your Advent of Code challenges.
 pub struct CliInterface {

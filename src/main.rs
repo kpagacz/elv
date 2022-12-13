@@ -11,13 +11,13 @@ fn main() {
     if let Some(token) = cli.token {
         let builder = Configuration::builder()
             .set_override("aoc.token", token)
-            .expect("Failed to set token");
+            .expect("Failed to set the Advent Of Code token");
         configuration = builder
             .build()
             .unwrap()
             .try_deserialize()
             .unwrap_or_else(|_| {
-                println!("Failed to deserialize the configuration, using default");
+                eprintln!("Failed to deserialize the configuration, using default...");
                 Configuration::new()
             })
     } else {
@@ -64,26 +64,34 @@ fn main() {
                     println!("{}", input);
                 }
                 if !no_file {
-                    let mut file = std::fs::File::create(out).expect("Failed to create file");
-                    file.write_all(input.as_bytes())
-                        .expect("Failed to write to file");
+                    std::fs::create_dir_all(out.as_path()).expect(
+                        format!("Failed to create the directory {}", out.to_str().unwrap())
+                            .as_str(),
+                    );
+                    let mut file = std::fs::File::create(&out).expect(
+                        format!("Failed to create the file {}", out.to_str().unwrap()).as_str(),
+                    );
+                    file.write_all(input.as_bytes()).expect(concat!(
+                        "Failed to write the input to the file. ",
+                        "You can still get the input if you print it with the --print flag"
+                    ));
                 }
             }
-            Err(e) => println!("Error: {}", e.description()),
+            Err(e) => panic!("Error when getting the input: {}", e.description()),
         }
     }
 
     fn handle_clear_cache_command(driver: &Driver) {
         match driver.clear_cache() {
-            Ok(_) => println!("Cache cleared"),
-            Err(e) => println!("Error: {}", e.description()),
+            Ok(_) => println!("✅ Cache cleared"),
+            Err(e) => panic!("❌ error when clearing cache: {}", e.description()),
         }
     }
 
     fn handle_description_command(driver: &Driver, year: u16, day: u8) {
         match driver.get_description(year, day) {
             Ok(description) => println!("{}", description),
-            Err(e) => println!("Error: {}", e.description()),
+            Err(e) => panic!("Error when getting the description: {}", e.description()),
         }
     }
 }

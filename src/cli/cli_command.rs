@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 #[derive(Debug, clap::Subcommand)]
 pub enum CliCommand {
-    /// Get the input for the challenge
+    /// 📨 Get the input for the challenge
     ///
     /// This command will download the input for the challenge and write it to
     /// a file. The default file name is "input". If the input has already
@@ -24,7 +24,7 @@ pub enum CliCommand {
         print: bool,
     },
 
-    /// Submit an answer to the challenge
+    /// 🎯 Submit an answer to the challenge
     ///
     /// This command will submit an answer to the challenge. If the answer has
     /// already been submitted, the result of the submission will be printed.
@@ -44,14 +44,14 @@ pub enum CliCommand {
         answer: String,
     },
 
-    /// Clears the cache
+    /// 🗑️  Clears the cache
     ///
     /// This command will clear the cache of the application. The cache is used
     /// to store the input and the results of submissions. This command will
     /// delete the cache directories and all of their contents.
     ClearCache,
 
-    /// Get the description of the challenge
+    /// 📄 Get the description of the challenge
     ///
     /// This command will download the description of the challenge and write it to
     /// the console.
