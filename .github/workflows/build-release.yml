@@ -37,7 +37,7 @@ jobs:
           key: ${{matrix.os}}
           shared-key: release
       - uses: actions-rs/toolchain@v1
-        if: !matrix.cross
+        if: ${{!matrix.cross}}
         with:
           toolchain: stable
           target: ${{matrix.target}}
