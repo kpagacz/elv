@@ -23,8 +23,8 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
             cross: true
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
             cross: false
           - os: macos-latest
             target: x86_64-apple-darwin
