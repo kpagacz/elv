@@ -2,6 +2,13 @@ use std::path::PathBuf;
 
 #[derive(Debug, clap::Subcommand)]
 pub enum CliCommand {
+    /// 📄 Get the description of the challenge
+    ///
+    /// This command will download the description of the challenge and write it to
+    /// the console.
+    #[command(visible_aliases = ["desc", "d"])]
+
+    Description,
     /// 📨 Get the input for the challenge
     ///
     /// This command will download the input for the challenge and write it to
@@ -50,11 +57,4 @@ pub enum CliCommand {
     /// to store the input and the results of submissions. This command will
     /// delete the cache directories and all of their contents.
     ClearCache,
-
-    /// 📄 Get the description of the challenge
-    ///
-    /// This command will download the description of the challenge and write it to
-    /// the console.
-    #[command(visible_aliases = ["desc", "d"])]
-    Description,
 }

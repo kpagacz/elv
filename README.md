@@ -17,6 +17,18 @@ their answers to it.
 
 ## Installation
 
+### Using `cargo`
+
+[`cargo`](https://doc.rust-lang.org/cargo/) is `Rust`'s package manager. You can use it to install `elv`
+directly from [`crates.io`](https://crates.io/). Once you install `cargo`, you can do it by running
+the below command in your terminal:
+
+```bash
+cargo install elv
+```
+
+After the installation, `elv` should be available from your CLI.
+
 ## Uninstallation
 
 ## Examples
