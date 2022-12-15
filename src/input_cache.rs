@@ -66,35 +66,17 @@ mod tests {
     use crate::errors::*;
 
     #[test]
-    fn can_cache_input() -> Result<()> {
+    fn cache_tests() -> Result<()> {
         let input = "test input";
         let year = 1000;
         let day = 1;
         InputCache::cache(input, year, day)?;
         let cached_input = InputCache::load(year, day)?;
         assert_eq!(input, cached_input);
-        Ok(())
-    }
 
-    #[test]
-    fn can_clear_cache() -> Result<()> {
-        let input = "test input";
-        let year = 1000;
-        let day = 2;
-        InputCache::cache(input, year, day)?;
-        let cached_input = InputCache::load(year, day)?;
-        assert_eq!(input, cached_input);
         InputCache::clear()?;
         assert!(InputCache::load(year, day).is_err());
-        Ok(())
-    }
 
-    #[test]
-    fn can_clear_cache_with_no_cache() -> Result<()> {
-        let year = 1000;
-        let day = 3;
-        InputCache::clear()?;
-        assert!(InputCache::load(year, day).is_err());
         Ok(())
     }
 }
