@@ -31,7 +31,7 @@ jobs:
           key: ${{matrix.os}}
           shared-key: release
       - name: Add target
-        run: rustc target add ${{matrix.target}}
+        run: rustup target add ${{matrix.target}}
       - name: Build
         run: cargo build --release --verbose --target=${{matrix.target}}
       - name: Test
