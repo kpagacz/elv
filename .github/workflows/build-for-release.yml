@@ -20,9 +20,12 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             cross: false
-          - os: windows-latest
+          - os: ubuntu-latest
             target: x86_64-pc-windows-gnu
             cross: true
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            cross: false
           - os: macos-latest
             target: x86_64-apple-darwin
             cross: false
@@ -48,11 +51,6 @@ jobs:
           use-cross: ${{matrix.cross}}
           command: build
           args: --target ${{matrix.target}} --release
-      - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --target ${{matrix.target}}
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
