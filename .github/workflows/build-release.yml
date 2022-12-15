@@ -15,31 +15,48 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            cross: false
+          - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            cross: false
           - os: windows-latest
             target: x86_64-pc-windows-gnu
+            cross: true
           - os: macos-latest
             target: x86_64-apple-darwin
+            cross: false
           - os: macos-latest
             target: aarch64-apple-darwin
+            cross: false
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v3
-      - if: ${{matrix.os == 'windows-latest'}}
-        uses: msys2/setup-msys2@v2
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2.2.0
         with:
           key: ${{matrix.os}}
           shared-key: release
-      - name: Add target
-        run: rustup target add ${{matrix.target}}
+      - uses: actions-rs/toolchain@v1
+        if: !matrix.cross
+        with:
+          toolchain: stable
+          target: ${{matrix.target}}
+      - uses: actions/checkout@v3
       - name: Build
-        run: cargo build --release --verbose --target=${{matrix.target}}
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{matrix.cross}}
+          command: build
+          args: --target ${{matrix.target}} --release
       - name: Test
-        run: cargo test --verbose
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --target ${{matrix.target}}
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
           name: elv-${{github.ref_name}}-${{matrix.target}}
-          path: target/${{matrix.target}}/release/elv
+          path: |
+            target/${{matrix.target}}/release/elv
+            target/${{matrix.target}}/release/elv.exe
