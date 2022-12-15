@@ -1,6 +1,8 @@
+[![Build and test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/kpagacz/elv/actions/workflows/rust.yml)
+
 # Elv
 
-## Introuction
+## Introduction
 
 `elv` is a command line interface program that lets you interact with [Advent of Code](adventofcode.com) API.
 Advent of Code is a yearly event that happens around the Christmas time. Eeach day of the event, one
