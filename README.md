@@ -31,6 +31,59 @@ cargo install elv
 
 After the installation, `elv` should be available from your CLI.
 
+### Downloading a binary
+
+`elv` publishes a number of executables for different operating systems and architectures.
+Head to the [releases subpage](https://github.com/kpagacz/elv/releases) to check out
+the latest released version of `elv`.
+
+#### Choose the binary matching your operating system and architecture
+
+The archived binaries follow a simple naming scheme of: `elv-{version}-{target-os-and-arch}.zip`.
+Match your operating system with the file name and the architecture:
+
+- Windows: look for one of the Windows binaries.
+- Apple: if you use one of the Silicon processors, download the `aarch64-apple-darwin` target,
+  otherwise download the other one.
+- Linux: get one of the Linux distributions.
+
+The choice between the `GNU` version and the other one depends on whether you have `GNU` installed.
+If yes, then go ahead and grab the appropriate `GNU` version.
+
+#### Run the binary
+
+The archives in each release contain a single executable file. Unpack the file.
+You need to put this executable file on your `PATH`, which translates to either unpacking the `zip`
+file to one of the directories already on `PATH` or unpacking anywhere you want and adding this
+location to `PATH`. If inspecting or changing your `PATH` is unclear, I recommend:
+
+- Windows: https://www.h3xed.com/windows/how-to-add-to-and-edit-windows-path-variable
+- Linux/MacOS: https://opensource.com/article/17/6/set-path-linux
+
+After that, you should be able to call `elv` directly in your CLI:
+
+```bash
+elv
+```
+
+### Installing from source
+
+If you possess a `Rust` compiler and [`cargo`](https://doc.rust-lang.org/cargo/), you can create
+your own executable from this repository. The steps are:
+
+1. Clone the repository.
+   You can use a terminal to clone the repository, e.g.:
+   ```bash
+   git clone git@github.com:kpagacz/elv.git
+   # or
+   https://github.com/kpagacz/elv.git
+   ```
+2. Install `elv`.
+   Navigate towards the `elv` directory and run:
+   ```bash
+   cargo install --path .
+   ```
+
 ## Uninstallation
 
 ## Examples
