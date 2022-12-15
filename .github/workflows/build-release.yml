@@ -8,7 +8,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-for-ubuntu-and-windows:
+  build-and-upload:
+    name: Build and archive the artifacts
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +30,8 @@ jobs:
         with:
           key: ${{matrix.os}}
           shared-key: release
+      - name: Add target
+        run: rustc target add ${{matrix.target}}
       - name: Build
         run: cargo build --release --verbose --target=${{matrix.target}}
       - name: Test
