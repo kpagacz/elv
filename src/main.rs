@@ -64,12 +64,15 @@ fn main() {
                     println!("{}", input);
                 }
                 if !no_file {
-                    std::fs::create_dir_all(out.as_path()).expect(
-                        format!("Failed to create the directory {}", out.to_str().unwrap())
-                            .as_str(),
-                    );
+                    if let Some(parent) = out.parent() {
+                        std::fs::create_dir_all(parent).expect(
+                            format!("Failed to create the directory {}", out.to_str().unwrap())
+                                .as_str(),
+                        );
+                    }
+
                     let mut file = std::fs::File::create(&out).expect(
-                        format!("Failed to create the file {}", out.to_str().unwrap()).as_str(),
+                        format!("Failed to create the file `{}`", out.to_str().unwrap()).as_str(),
                     );
                     file.write_all(input.as_bytes()).expect(concat!(
                         "Failed to write the input to the file. ",
