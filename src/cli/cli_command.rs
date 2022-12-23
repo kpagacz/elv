@@ -7,7 +7,6 @@ pub enum CliCommand {
     /// This command will download the description of the challenge and write it to
     /// the console.
     #[command(visible_aliases = ["desc", "d"])]
-
     Description,
     /// 📨 Get the input for the challenge
     ///
@@ -57,4 +56,10 @@ pub enum CliCommand {
     /// to store the input and the results of submissions. This command will
     /// delete the cache directories and all of their contents.
     ClearCache,
+
+    /// 📁 List the application directories
+    ///
+    /// Lists the directories used by the application. This command will print
+    /// the directories used for the cache and the configuration file.
+    ListDirs,
 }

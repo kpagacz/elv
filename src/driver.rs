@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::errors::*;
 use chrono::TimeZone;
 use error_chain::bail;
@@ -143,6 +145,29 @@ impl Driver {
         };
 
         Ok(now >= &input_release_time)
+    }
+    /// Lists the directories used by the application
+    /// # Example
+    /// ```
+    /// use elv::Driver;
+    /// let driver = Driver::default();
+    /// driver.list_app_directories();
+    /// ```
+    pub fn list_app_directories(&self) -> Result<HashMap<&str, String>> {
+        let mut directories = HashMap::new();
+        if let Some(config_dir) = Configuration::get_project_directories()
+            .config_dir()
+            .to_str()
+        {
+            directories.insert("config", config_dir.to_owned());
+        }
+        if let Some(cache_dir) = Configuration::get_project_directories()
+            .cache_dir()
+            .to_str()
+        {
+            directories.insert("cache", cache_dir.to_owned());
+        }
+        Ok(directories)
     }
 }
 

@@ -48,6 +48,7 @@ fn main() {
         }
         CliCommand::ClearCache => handle_clear_cache_command(&driver),
         CliCommand::Description => handle_description_command(&driver, year.unwrap(), day.unwrap()),
+        CliCommand::ListDirs => handle_list_dirs_command(&driver),
     }
 
     fn handle_input_command(
@@ -95,6 +96,17 @@ fn main() {
         match driver.get_description(year, day) {
             Ok(description) => println!("{}", description),
             Err(e) => panic!("Error when getting the description: {}", e.description()),
+        }
+    }
+
+    fn handle_list_dirs_command(driver: &Driver) {
+        match driver.list_app_directories() {
+            Ok(dirs) => {
+                for (name, path) in dirs {
+                    println!("{}: {}", name, path);
+                }
+            }
+            Err(e) => panic!("Error when listing the directories: {}", e.description()),
         }
     }
 }
