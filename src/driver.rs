@@ -44,7 +44,7 @@ impl Driver {
 
         match InputCache::load(year, day) {
             Ok(input) => return Ok(input),
-            Err(e) => println!("Failed loading the input from the cache, cause: {}", e),
+            Err(e) => println!("Failed loading the input from the cache. Cause:\n    {}", e),
         };
 
         let aoc_api = AocApi::new(&self.configuration);
@@ -135,7 +135,7 @@ impl Driver {
         day: u8,
         now: &chrono::DateTime<chrono::Utc>,
     ) -> Result<bool> {
-        let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 4)
+        let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)
             .unwrap()
             .with_ymd_and_hms(year as i32, 12, day as u32, 0, 0, 0)
             .single()
@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_is_input_released_yet() {
         let driver = Driver::default();
-        let now = chrono::Utc.with_ymd_and_hms(2022, 12, 1, 4, 0, 0).unwrap();
+        let now = chrono::Utc.with_ymd_and_hms(2022, 12, 1, 5, 0, 0).unwrap();
         for (year, day, expected) in &[
             (2019, 1, true),
             (2020, 1, true),

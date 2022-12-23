@@ -38,14 +38,14 @@ impl AocApi {
         };
         let mut response = match self.http_client.get(url).send() {
             Ok(response) => response,
-            Err(_) => return Self::failed_input_request_response(),
+            Err(_) => return InputResponse::failed(),
         };
         if response.status() != StatusCode::OK {
-            return Self::failed_input_request_response();
+            return InputResponse::failed();
         }
         let mut body = String::new();
         if response.read_to_string(&mut body).is_err() {
-            return Self::failed_input_request_response();
+            return InputResponse::failed();
         }
         if body.starts_with("Please don't repeatedly request this") {
             return InputResponse::new(
@@ -208,10 +208,6 @@ impl AocApi {
         );
         Ok(answer_text)
     }
-
-    fn failed_input_request_response() -> InputResponse {
-        InputResponse::new("Failed to get input".to_string(), ResponseStatus::Error)
-    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -230,6 +226,10 @@ pub struct InputResponse {
 impl InputResponse {
     pub fn new(body: String, status: ResponseStatus) -> Self {
         Self { body, status }
+    }
+
+    pub fn failed() -> Self {
+        Self::new("Failed to get input".to_string(), ResponseStatus::Error)
     }
 }
 
