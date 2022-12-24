@@ -31,6 +31,22 @@ cargo install elv
 
 After the installation, `elv` should be available from your CLI.
 
+### Using `homebrew`
+
+`Homebrew` is the self-described "Missing Package Manager for macOS (or Linux)". If you want to
+install `elv` using `homebrew`, first you need to [install `homebrew` itself](https://brew.sh/).
+Then, run the below in your terminal:
+
+```bash
+brew install kpagacz/elv/elv
+```
+
+`elv` is hosted on a private tap (if you are into `homebrew`'s terminology), which is essentially
+a [GitHub repository](https://github.com/kpagacz/homebrew-elv). By default, `homebrew` installs
+the latest version of the application available in the repository. If you want to install one
+of the previous versions, you will need to checkout a specific commit corresponding to that
+version.
+
 ### Downloading a binary
 
 `elv` publishes a number of executables for different operating systems and architectures.
