@@ -14,7 +14,7 @@ test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch
 ## Introduction
 
 `elv` is a command line interface program that lets you interact with
-[Advent of Code](adventofcode.com) API. Advent of Code is a yearly event
+[Advent of Code](https://adventofcode.com) API. Advent of Code is a yearly event
 that happens around Christmas time. Each day of the event, one
 algorithmic riddle becomes available on its site and everyone can join
 by solving it and submitting their answers to it.
