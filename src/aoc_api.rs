@@ -174,7 +174,10 @@ impl<'a> AocApi<'a> {
         let pkg_name: &str = env!("CARGO_PKG_NAME");
         let pkg_version: &str = env!("CARGO_PKG_VERSION");
 
-        format!("{}/{}", pkg_name, pkg_version)
+        format!(
+            "{}/{} (+{} author:{})",
+            pkg_name, pkg_version, "https://github.com/kpagacz/elv", "konrad.pagacz@gmail.com"
+        )
     }
 
     fn get_aoc_answer_selector() -> Selector {

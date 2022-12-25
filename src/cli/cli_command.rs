@@ -7,7 +7,16 @@ pub enum CliCommand {
     /// This command will download the description of the challenge and write it to
     /// the console.
     #[command(visible_aliases = ["desc", "d"])]
-    Description,
+    Description {
+        /// The column width of the output in characters
+        ///
+        /// Some terminals have limited horizontal space, so this option
+        /// can be used to limit the width of the output.
+        /// (default: 120)
+        #[arg(short, long)]
+        width: Option<usize>,
+    },
+
     /// 📨 Get the input for the challenge
     ///
     /// This command will download the input for the challenge and write it to
