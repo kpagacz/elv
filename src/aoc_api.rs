@@ -11,17 +11,18 @@ use std::io::Read;
 use std::sync::Arc;
 
 const AOC_URL: &str = "https://adventofcode.com";
-const TERM_WIDTH: usize = 120;
 
-#[derive(Debug, Default)]
-pub struct AocApi {
+#[derive(Debug)]
+pub struct AocApi<'a> {
     http_client: Client,
+    configuration: &'a Configuration,
 }
 
-impl AocApi {
-    pub fn new(configuration: &Configuration) -> Self {
+impl<'a> AocApi<'a> {
+    pub fn new(configuration: &'a Configuration) -> AocApi<'a> {
         Self {
             http_client: Self::prepare_http_client(configuration),
+            configuration,
         }
     }
 
@@ -92,7 +93,7 @@ impl AocApi {
         let mut body = String::new();
         response.read_to_string(&mut body)?;
 
-        let message = Self::parse_submission_answer_body(&body)?;
+        let message = self.parse_submission_answer_body(&body)?;
         let submission_status = if message.starts_with("That's the right answer!") {
             SubmissionStatus::Correct
         } else if message.starts_with("You gave an answer too recently") {
@@ -150,7 +151,7 @@ impl AocApi {
             .join("\n");
         Ok(html2text::from_read_with_decorator(
             description.as_bytes(),
-            TERM_WIDTH,
+            self.configuration.cli.output_width,
             html2text::render::text_renderer::TrivialDecorator::new(),
         ))
     }
@@ -195,7 +196,7 @@ impl AocApi {
         }
     }
 
-    fn parse_submission_answer_body(body: &str) -> Result<String> {
+    fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String> {
         let document: Html = Html::parse_document(body);
         let answer = document
             .select(&Self::get_aoc_answer_selector())
@@ -203,7 +204,7 @@ impl AocApi {
             .chain_err(|| "Failed to parse the answer")?;
         let answer_text = html2text::from_read(
             answer.text().collect::<Vec<_>>().join("").as_bytes(),
-            TERM_WIDTH,
+            self.configuration.cli.output_width,
         );
         Ok(answer_text)
     }
@@ -259,7 +260,9 @@ mod tests {
  vacation. <a href="/2020/day/1#part2">[Continue to Part Two]</a></p></article>
 </main>"#;
 
-        let message = AocApi::parse_submission_answer_body(body).unwrap();
+        let configuration = Configuration::default();
+        let api = AocApi::new(&configuration);
+        let message = api.parse_submission_answer_body(body).unwrap();
         assert_eq!(message, "That's the right answer! You are one gold star closer to saving your vacation. [Continue to Part Two]\n");
     }
 
@@ -276,7 +279,9 @@ mod tests {
         </main>
         "#;
 
-        let message = AocApi::parse_submission_answer_body(body).unwrap();
+        let configuration = Configuration::default();
+        let api = AocApi::new(&configuration);
+        let message = api.parse_submission_answer_body(body).unwrap();
         assert_eq!(message, concat!(
             "That's not the right answer. If you're stuck, make sure you're using the full input data; there are also some general\n",
             "tips on the about page, or you can ask for hints on the subreddit. ",

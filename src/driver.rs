@@ -71,8 +71,8 @@ impl Driver {
         let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(year, day) {
             Ok(c) => Some(c),
             Err(e) => {
-                println!("Error: {}", e);
-                println!("The application will not have any memory of this submission.");
+                eprintln!("Error: {}", e);
+                eprintln!("The application will not have any memory of this submission.");
                 None
             }
         };

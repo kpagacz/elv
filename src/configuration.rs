@@ -23,10 +23,22 @@ fn default_token() -> String {
     "".to_string()
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CliConfiguration {
+    pub output_width: usize,
+}
+
+impl Default for CliConfiguration {
+    fn default() -> Self {
+        CliConfiguration { output_width: 120 }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Configuration {
     #[serde(default)]
     pub aoc: AocConfiguration,
+    pub cli: CliConfiguration,
 }
 
 impl Configuration {
