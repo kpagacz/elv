@@ -5,7 +5,7 @@
 ## Introduction
 
 `elv` is a command line interface program that lets you interact with [Advent of Code](adventofcode.com) API.
-Advent of Code is a yearly event that happens around the Christmas time. Eeach day of the event, one
+Advent of Code is a yearly event that happens around Christmas time. Each day of the event, one
 algorithmic riddle becomes available on its site and everyone can join by solving it and submitting
 their answers to it.
 
@@ -25,7 +25,7 @@ their answers to it.
 directly from [`crates.io`](https://crates.io/). Once you install `cargo`, you can do it by running
 the below command in your terminal:
 
-```bash
+```console
 cargo install elv
 ```
 
@@ -34,73 +34,102 @@ After the installation, `elv` should be available from your CLI.
 ### Using `homebrew`
 
 `Homebrew` is the self-described "Missing Package Manager for macOS (or Linux)". If you want to
-install `elv` using `homebrew`, first you need to [install `homebrew` itself](https://brew.sh/).
+install `elv` using `homebrew`; first you need to [install `homebrew` itself](https://brew.sh/).
 Then, run the below in your terminal:
 
-```bash
+```console
 brew install kpagacz/elv/elv
 ```
 
 `elv` is hosted on a private tap (if you are into `homebrew`'s terminology), which is essentially
 a [GitHub repository](https://github.com/kpagacz/homebrew-elv). By default, `homebrew` installs
-the latest version of the application available in the repository. If you want to install one
-of the previous versions, you will need to checkout a specific commit corresponding to that
+the latest version of the application available in the repository. To install one
+of the previous versions, you must check out a specific commit corresponding to that
 version.
 
 ### Downloading a binary
 
-`elv` publishes a number of executables for different operating systems and architectures.
+`elv` publishes several executables for different operating systems and architectures.
 Head to the [releases subpage](https://github.com/kpagacz/elv/releases) to check out
 the latest released version of `elv`.
 
 #### Choose the binary matching your operating system and architecture
 
-The archived binaries follow a simple naming scheme of: `elv-{version}-{target-os-and-arch}.zip`.
+The archived binaries follow a simple naming scheme: `elv-{version}-{target-os-and-arch}.zip`.
 Match your operating system with the file name and the architecture:
 
 - Windows: look for one of the Windows binaries.
-- Apple: if you use one of the Silicon processors, download the `aarch64-apple-darwin` target,
-  otherwise download the other one.
+- Apple: if you use one of the Silicon processors, download the `aarch64-apple-darwin` target; otherwise, download the other one.
 - Linux: get one of the Linux distributions.
 
-The choice between the `GNU` version and the other one depends on whether you have `GNU` installed.
+The choice between the `GNU` version and the other depends on whether you have `GNU` installed.
 If yes, then go ahead and grab the appropriate `GNU` version.
 
 #### Run the binary
 
 The archives in each release contain a single executable file. Unpack the file.
 You need to put this executable file on your `PATH`, which translates to either unpacking the `zip`
-file to one of the directories already on `PATH` or unpacking anywhere you want and adding this
+file to one of the directories already on `PATH` or anywhere you want and adding this
 location to `PATH`. If inspecting or changing your `PATH` is unclear, I recommend:
 
 - Windows: https://www.h3xed.com/windows/how-to-add-to-and-edit-windows-path-variable
-- Linux/MacOS: https://opensource.com/article/17/6/set-path-linux
+- Linux/macOS: https://opensource.com/article/17/6/set-path-linux
 
 After that, you should be able to call `elv` directly in your CLI:
 
-```bash
+```console
 elv
 ```
 
 ### Installing from source
 
-If you possess a `Rust` compiler and [`cargo`](https://doc.rust-lang.org/cargo/), you can create
-your own executable from this repository. The steps are:
+You can create your own executable from this repository if you possess a `Rust` compiler and [`cargo`](https://doc.rust-lang.org/cargo/). The steps are:
 
 1. Clone the repository.
    You can use a terminal to clone the repository, e.g.:
-   ```bash
+
+   ```console
    git clone git@github.com:kpagacz/elv.git
    # or
    https://github.com/kpagacz/elv.git
    ```
+
 2. Install `elv`.
    Navigate towards the `elv` directory and run:
-   ```bash
+
+   ```console
    cargo install --path .
    ```
 
 ## Uninstallation
+
+### Removing configuration files and caches
+
+`elv` uses a configuration file and caches when running. You can list the directories `elv` uses by running:
+
+```console
+elv list-dirs
+```
+
+The output lists the directories. If you want your configuration file gone and the cache gone as well,
+just remove these directories from your system.
+
+### Cargo
+
+```console
+cargo uninstall elv
+```
+
+### Installed from binary
+
+Delete the binary from your system.
+
+### Installed via brew
+
+```console
+brew uninstall kpagacz/elv/elv
+brew autoremove
+```
 
 ## Examples
 
@@ -110,9 +139,9 @@ to the API on its own, so you need to get your token beforehand.
 ### Getting the session token - **IMPORTANT**
 
 You will need to [log into Advent of Code](https://adventofcode.com/2022/auth/login). AoC site sends
-the session token back to you using cookies. You need to inspect the cookies and get the value of the
-one named `session`. This is your session token you can use with `elv`. The session token is valid
-for about a month, so remember to get another one, once the old one expires.
+the session token back to you using cookies. So you need to inspect the cookies and get the
+one named `session` value. This is your session token you can use with `elv`. The session token is valid
+for about a month, so remember to get another once the old one expires.
 
 If you do not get the session token, you will not be able to interact with Advent of Code API using `elv`.
 
@@ -122,19 +151,19 @@ If you do not get the session token, you will not be able to interact with Adven
 
 This works only while the event is being held, not all the time of the year.
 While the event is not held, you need to specify the year and day of the
-challenge explicitly using `-y` and `-d` parameters.
+challenge explicitly using `-y' and `-d' parameters.
 
-```bash
+```console
 elv -t <YOUR SESSION TOKEN> desc
 ```
 
-#### Getting description of a particular riddle
+#### Getting a description of a particular riddle
 
 You specify the day and the year of the riddle.
 
-```bash
+```console
 elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 desc
-# Prints the description of the riddle published on the first of December 2021
+# Prints the description of the riddle published on the 1st of December 2021
 ```
 
 ### Downloading the input
@@ -143,9 +172,9 @@ elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 desc
 
 This works only while the event is being held, not all the time of the year.
 While the event is not held, you need to specify the year and day of the
-challenge explicitly using `-y` and `-d` parameters.
+challenge explicitly using `-y' and `-d' parameters.
 
-```bash
+```console
 elv -t <YOUR SESSION TOKEN> input
 ```
 
@@ -153,7 +182,7 @@ elv -t <YOUR SESSION TOKEN> input
 
 You specify the day and the year of the riddle.
 
-```bash
+```console
 elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 input
 # downloads the input for the riddle published on the 1st of December 2021
 ```
@@ -163,39 +192,54 @@ elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 input
 ### How can I store the session token?
 
 `elv` looks for your token in three places, starting from the first on the below list
-and moving to the next one in case it did not found the token already.
+and moving to the next one if it did not find the token already.
 
 1. Passed as an argument to `elv` with the `-t` parameter:
 
-```bash
-elv -t <YOUR TOKEN HERE> input
-# or
-elv --token <YOUR TOKEN HERE> input
-```
+   ```console
+   elv -t <YOUR TOKEN HERE> input
+   # or
+   elv --token <YOUR TOKEN HERE> input
+   ```
 
-As a live example:
+   As a live example:
 
-```bash
-elv -t 01234567890123456789abcdefghi input
-```
+   ```console
+   elv -t 01234567890123456789abcdefghi input
+   ```
 
 2. As an environment variable. `elv` looks for an environmental variable `AOC_TOKEN`
    while searching for your session token. Example:
 
-```bash
-export AOC_TOKEN=0123456789abcdefghi
-elv input
-```
+   ```console
+   export AOC_TOKEN=0123456789abcdefghi
+   elv input
+   ```
 
-Despite the fact we have not provided the value for the `--token` parameter,
-`elv` will pick the value of `AOC_TOKEN` and use it as a token.
+   Despite the fact we have not provided the value for the `--token` parameter,
+   `elv` will pick the value of `AOC_TOKEN` and use it as a token.
 
 3. In a configuration file. `elv` creates a configuration file in your
-   home directory.
+   home directory. You can find the configuration file in a directory listed
+   by running `elv list-dirs` in your terminal. Your config file should
+   look like this:
+
+   ```toml
+   [aoc]
+   token = "<YOUR TOKEN HERE>"
+   ```
 
 ### How can I get the value of the session token?
 
-The session token is sent to your http client (usually your browser) as a cookie,
+The session token is sent to your HTTP client (usually your browser) as a cookie
 when you log into the Advent of Code web page. The easiest way to get the value
-of a cookie is using your browser's built-in inspection tools. Look for a way
+of a cookie is by using your browser's built-in inspection tools. Look for a way
 to inspect the cookies specific to your browser.
+
+### Where is the configuration file?
+
+All the directories `elv` uses can be listed by running:
+
+```console
+elv list-dirs
+```
