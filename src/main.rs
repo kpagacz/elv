@@ -67,18 +67,24 @@ fn main() {
                 if !no_file {
                     if let Some(parent) = out.parent() {
                         std::fs::create_dir_all(parent).expect(
-                            format!("Failed to create the directory {}", out.to_str().unwrap())
-                                .as_str(),
+                            format!("Failed to create the directory {}\nYou can still get the input if you print it with the --print flag",
+                            out.to_str().unwrap())
+                                .as_str()
                         );
                     }
 
                     let mut file = std::fs::File::create(&out).expect(
-                        format!("Failed to create the file `{}`", out.to_str().unwrap()).as_str(),
+                        format!("Failed to create the file `{}`\nYou can still get the input if you print it with the --print flag",
+                        out.to_str().unwrap()).as_str()
                     );
-                    file.write_all(input.as_bytes()).expect(concat!(
-                        "Failed to write the input to the file. ",
-                        "You can still get the input if you print it with the --print flag"
-                    ));
+
+                    match file.write_all(input.as_bytes()) {
+                        Ok(_) => eprintln!("✅ Input written to `{}`", out.to_str().unwrap()),
+                        Err(_) => panic!(concat!(
+                            "❌ Failed to write the input to the file. ",
+                            "You can still get the input if you print it with the --print flag"
+                        )),
+                    }
                 }
             }
             Err(e) => panic!("Error when getting the input: {}", e.description()),
@@ -87,7 +93,7 @@ fn main() {
 
     fn handle_clear_cache_command(driver: &Driver) {
         match driver.clear_cache() {
-            Ok(_) => println!("✅ Cache cleared"),
+            Ok(_) => eprintln!("✅ Cache cleared"),
             Err(e) => panic!("❌ error when clearing cache: {}", e.description()),
         }
     }

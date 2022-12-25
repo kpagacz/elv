@@ -142,7 +142,6 @@ impl AocApi {
             .read_to_string(&mut body)
             .chain_err(|| "Failed to read the response body")?;
 
-        println!("body: {}", body);
         let description_selector = Selector::parse(".day-desc").unwrap();
         let description = Html::parse_document(&body)
             .select(&description_selector)
