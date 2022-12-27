@@ -3,7 +3,6 @@ use crate::{
     aoc_domain::{Submission, SubmissionResult},
     configuration::Configuration,
 };
-use error_chain::State;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,12 +24,14 @@ impl SubmissionHistory {
     pub fn from_cache(year: u16, day: u8) -> Result<Self> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
-            return Err(Error(
-                ErrorKind::CacheFailure(format!("Cache file not found: {}", cache_path.display())),
-                State::default(),
-            ));
+            Self::new(year, day).save_to_cache()?;
         }
-        let content = std::fs::read(&cache_path)?;
+        let content = std::fs::read(&cache_path).chain_err(|| {
+            ErrorKind::CacheFailure(format!(
+                "Failed to read cache file: {}",
+                cache_path.display()
+            ))
+        })?;
         serde_cbor::from_slice::<SubmissionHistory>(&content).chain_err(|| {
             ErrorKind::CacheFailure(format!(
                 "Failed to deserialize cache file: {}",
@@ -71,11 +72,25 @@ impl SubmissionHistory {
         let cache_path = Self::cache_path(self.year, self.day);
         let cache_dir = cache_path.parent().unwrap();
         if !cache_path.exists() {
-            std::fs::create_dir_all(cache_dir)?;
+            std::fs::create_dir_all(cache_dir).chain_err(|| {
+                ErrorKind::CacheFailure(format!(
+                    "Failed to create cache directory: {}",
+                    cache_dir.display()
+                ))
+            })?;
         }
-
-        let serialized = serde_cbor::to_vec(&self)?;
-        std::fs::write(cache_path, serialized)?;
+        let serialized = serde_cbor::to_vec(&self).chain_err(|| {
+            ErrorKind::CacheFailure(format!(
+                "Failed to serialize cache file: {}",
+                cache_path.display()
+            ))
+        })?;
+        std::fs::write(&cache_path, serialized).chain_err(|| {
+            ErrorKind::CacheFailure(format!(
+                "Failed to write cache file: {}",
+                cache_path.display()
+            ))
+        })?;
 
         Ok(())
     }

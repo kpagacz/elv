@@ -11,15 +11,6 @@ use crate::duration_string::DurationString;
 use crate::input_cache::InputCache;
 use crate::submission_history::SubmissionHistory;
 
-const CACHE_SAVE_ERROR_MESSAGE: &str = concat!(
-    "Could not save the submission result to the cache and the application will not ",
-    "have any memory of this submission.",
-    " Please check your permissions.",
-    " If you are using Windows, please run the program as administrator.",
-    " Be aware that the cache is used to prevent spamming the Advent of Code servers.",
-    " If you spam the servers, your IP might be banned from the Advent of Code servers.",
-);
-
 #[derive(Debug, Default)]
 pub struct Driver {
     configuration: Configuration,
@@ -44,14 +35,14 @@ impl Driver {
 
         match InputCache::load(year, day) {
             Ok(input) => return Ok(input),
-            Err(e) => println!("Failed loading the input from the cache. Cause:\n    {}", e),
+            Err(e) => eprintln!("Failed loading the input from the cache. Cause:\n    {}", e),
         };
 
         let aoc_api = AocApi::new(&self.configuration);
         let input = aoc_api.get_input(&year, &day);
         if input.status == ResponseStatus::Ok {
             if InputCache::cache(&input.body, year, day).is_err() {
-                println!("Failed saving the input to the cache");
+                eprintln!("Failed saving the input to the cache");
             }
         } else {
             bail!("Failed to get the input: {}", input.body);
@@ -65,7 +56,7 @@ impl Driver {
         day: u8,
         part: crate::aoc_domain::RiddlePart,
         answer: String,
-    ) {
+    ) -> Result<()> {
         let aoc_api = AocApi::new(&self.configuration);
 
         let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(year, day) {
@@ -80,41 +71,40 @@ impl Driver {
         let submission = Submission::new(part, answer, year, day);
         if let Some(ref cache) = cache {
             if let Some(submission_result) = cache.get_result_for_submission(&submission) {
-                println!("Your submission result:\n{:?}", submission_result.message);
-                return;
+                eprintln!("♻️  You submitted this answer before and the result was...\n\n");
+                println!("{}", submission_result.message);
+                return Ok(());
             }
         }
 
         if let Some(ref cache) = cache {
             if let Some(wait_time) = cache.wait_time(chrono::Utc::now()) {
-                println!("You wanted to submit an answer too soon. Please wait {} before submitting again.", DurationString::new(wait_time));
-                return;
+                eprintln!("🌡️  You wanted to submit an answer too soon. Please wait {} before submitting again.",
+                DurationString::new(wait_time));
+                return Ok(());
             }
         }
 
-        let submission_result = aoc_api.submit_answer(submission);
-        if submission_result.is_err() {
-            println!("Error: {}", submission_result.err().unwrap());
-            return;
-        };
-        let submission_result_unwrapped = submission_result.unwrap();
-        println!(
-            "Your submission result:\n{:?}",
-            submission_result_unwrapped.message
-        );
-        if submission_result_unwrapped.status == SubmissionStatus::Correct
-            || submission_result_unwrapped.status == SubmissionStatus::Incorrect
-            || submission_result_unwrapped.status == SubmissionStatus::TooSoon
+        let submission_result = aoc_api
+            .submit_answer(submission)
+            .chain_err(|| "Failed to submit the answer")?;
+        eprintln!("Your submission result...\n\n");
+        println!("{}", submission_result.message);
+        if submission_result.status == SubmissionStatus::Correct
+            || submission_result.status == SubmissionStatus::Incorrect
+            || submission_result.status == SubmissionStatus::TooSoon
         {
             if let Some(ref mut cache) = cache {
-                cache.add(submission_result_unwrapped);
-                cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
+                cache.add(submission_result);
+                return cache.save_to_cache();
             } else {
                 let mut cache = SubmissionHistory::new(year, day);
-                cache.add(submission_result_unwrapped);
-                cache.save_to_cache().expect(CACHE_SAVE_ERROR_MESSAGE);
+                cache.add(submission_result);
+                return cache.save_to_cache();
             }
         }
+
+        Ok(())
     }
 
     pub fn clear_cache(&self) -> Result<()> {

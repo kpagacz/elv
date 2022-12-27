@@ -36,7 +36,10 @@ fn main() {
         } => handle_input_command(builder, year.unwrap(), day.unwrap(), out, no_file, print),
         CliCommand::Submit { part, answer } => {
             let driver = Driver::new(get_configuration(builder));
-            driver.submit_answer(year.unwrap(), day.unwrap(), part, answer)
+            match driver.submit_answer(year.unwrap(), day.unwrap(), part, answer) {
+                Ok(_) => {}
+                Err(_) => {}
+            }
         }
         CliCommand::ClearCache => handle_clear_cache_command(builder),
         CliCommand::Description { width } => {
