@@ -18,7 +18,7 @@ impl Display for RiddlePart {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Submission {
     pub part: RiddlePart,
     pub answer: String,
@@ -37,7 +37,7 @@ impl Submission {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub enum SubmissionStatus {
     Correct,
     Incorrect,
@@ -46,7 +46,7 @@ pub enum SubmissionStatus {
     WrongLevel,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct SubmissionResult {
     pub submission: Submission,
     pub status: SubmissionStatus,
@@ -55,7 +55,7 @@ pub struct SubmissionResult {
     #[serde(with = "chrono::serde::ts_seconds")]
     pub submitted_at: chrono::DateTime<chrono::Utc>,
 
-    pub wait_minutes: i64,
+    pub wait_time: std::time::Duration,
 }
 
 impl SubmissionResult {
@@ -64,14 +64,14 @@ impl SubmissionResult {
         status: SubmissionStatus,
         message: String,
         submitted_at: chrono::DateTime<chrono::Utc>,
-        wait_minutes: i64,
+        wait_time: std::time::Duration,
     ) -> Self {
         SubmissionResult {
             submission,
             status,
             message,
             submitted_at,
-            wait_minutes,
+            wait_time,
         }
     }
 }

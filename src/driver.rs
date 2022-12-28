@@ -59,7 +59,8 @@ impl Driver {
     ) -> Result<()> {
         let aoc_api = AocApi::new(&self.configuration);
 
-        let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(year, day) {
+        let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(&year, &day)
+        {
             Ok(c) => Some(c),
             Err(e) => {
                 eprintln!("Error: {}", e);
@@ -70,15 +71,25 @@ impl Driver {
 
         let submission = Submission::new(part, answer, year, day);
         if let Some(ref cache) = cache {
-            if let Some(submission_result) = cache.get_result_for_submission(&submission) {
-                eprintln!("♻️  You submitted this answer before and the result was...\n\n");
+            if let Some(submission_result) = cache.correct_submission(&submission.part) {
+                eprintln!("🎉  You already submitted the correct answer for this part. Here is the result from last time...\n\n");
                 println!("{}", submission_result.message);
                 return Ok(());
             }
-        }
 
-        if let Some(ref cache) = cache {
-            if let Some(wait_time) = cache.wait_time(chrono::Utc::now()) {
+            if let Some(submission_result) = cache.get_result_for_submission(&submission) {
+                eprintln!("♻️  You submitted this answer before and the result was...\n\n");
+                println!("{}", submission_result.message);
+                if let Some(wait_time) = cache.wait_time(&chrono::Utc::now(), &submission.part) {
+                    eprintln!(
+                        "\n🌡️  You still need to wait {} before another submission.",
+                        DurationString::new(wait_time)
+                    );
+                }
+                return Ok(());
+            }
+
+            if let Some(wait_time) = cache.wait_time(&chrono::Utc::now(), &submission.part) {
                 eprintln!("🌡️  You wanted to submit an answer too soon. Please wait {} before submitting again.",
                 DurationString::new(wait_time));
                 return Ok(());

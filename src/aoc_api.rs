@@ -104,11 +104,11 @@ impl<'a> AocApi<'a> {
             SubmissionStatus::Incorrect
         };
 
-        let mut wait_minutes = 0;
+        let mut wait_time = std::time::Duration::new(0, 0);
         if submission_status == SubmissionStatus::Incorrect
             || submission_status == SubmissionStatus::TooSoon
         {
-            wait_minutes = Self::extract_wait_time_from_message(&message);
+            wait_time = Self::extract_wait_time_from_message(&message);
         }
 
         Ok(SubmissionResult::new(
@@ -116,7 +116,7 @@ impl<'a> AocApi<'a> {
             submission_status,
             message,
             chrono::Utc::now(),
-            wait_minutes,
+            wait_time,
         ))
     }
 
@@ -184,18 +184,19 @@ impl<'a> AocApi<'a> {
         Selector::parse("main > article > p").unwrap()
     }
 
-    fn extract_wait_time_from_message(message: &str) -> i64 {
-        let please_wait_position = match message.find("lease wait ") {
+    fn extract_wait_time_from_message(message: &str) -> std::time::Duration {
+        let please_wait_marker = "lease wait ";
+        let please_wait_position = match message.find(please_wait_marker) {
             Some(position) => position,
-            None => return 0,
+            None => return std::time::Duration::new(0, 0),
         };
-        let minutes_position = please_wait_position + 11;
+        let minutes_position = please_wait_position + please_wait_marker.len();
         let next_space_position = message[minutes_position..].find(' ').unwrap();
         let minutes = &message[minutes_position..minutes_position + next_space_position];
         if minutes == "one" {
-            1
+            std::time::Duration::from_secs(60)
         } else {
-            minutes.parse::<i64>().unwrap_or(0)
+            std::time::Duration::from_secs(60 * minutes.parse::<u64>().unwrap_or(0))
         }
     }
 
@@ -244,14 +245,14 @@ mod tests {
     fn extraction_of_wait_time_from_message1() {
         let message = "That's not the right answer; your answer is too low. Please wait one minute and try again (you guessed 1).";
         let wait_time = AocApi::extract_wait_time_from_message(message);
-        assert_eq!(wait_time, 1);
+        assert_eq!(wait_time, std::time::Duration::from_secs(60));
     }
 
     #[test]
     fn extraction_of_wait_time_from_message2() {
         let message = "That's not the right answer; your answer is too low. Please wait 2 minutes and try again (you guessed 1).";
         let wait_time = AocApi::extract_wait_time_from_message(message);
-        assert_eq!(wait_time, 2);
+        assert_eq!(wait_time, std::time::Duration::from_secs(2 * 60));
     }
 
     #[test]
