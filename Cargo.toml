@@ -2,7 +2,7 @@
 [package]
 name = "elv"
 description = "A little CLI helper for Advent of Code. 🎄"
-version = "0.11.0"
+version = "0.11.1"
 edition = "2021"
 readme = "README.md"
 license-file = "LICENSE"

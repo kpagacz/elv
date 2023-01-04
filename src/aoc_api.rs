@@ -129,28 +129,25 @@ impl<'a> AocApi<'a> {
             .http_client
             .get(url)
             .send()
-            .chain_err(|| "Failed to send the request for the description")?;
+            .chain_err(|| "Failed to get the response from the AoC server")?;
 
         if !response.status().is_success() {
-            bail!(
-                "Failed to get the description. Status code: {}",
-                response.status()
-            );
+            bail!("HTTP error. Status code: {}", response.status());
         }
 
         let mut body = String::new();
         response
             .read_to_string(&mut body)
             .chain_err(|| "Failed to read the response body")?;
-
         let description_selector = Selector::parse(".day-desc").unwrap();
         let description = Html::parse_document(&body)
             .select(&description_selector)
             .map(|e| e.inner_html())
             .collect::<Vec<_>>()
             .join("\n");
+        let description_with_brs = Self::add_br_to_lines_in_pre_blocks(&description);
         Ok(html2text::from_read_with_decorator(
-            description.as_bytes(),
+            description_with_brs.as_bytes(),
             self.configuration.cli.output_width,
             html2text::render::text_renderer::TrivialDecorator::new(),
         ))
@@ -211,6 +208,25 @@ impl<'a> AocApi<'a> {
             self.configuration.cli.output_width,
         );
         Ok(answer_text)
+    }
+
+    fn add_br_to_lines_in_pre_blocks(body: &str) -> String {
+        let mut result = String::new();
+        let mut in_pre_block = false;
+        for line in body.lines() {
+            if line.contains("<pre>") {
+                in_pre_block = true;
+            }
+            if line.contains("</pre>") {
+                in_pre_block = false;
+            }
+            if in_pre_block {
+                result.push_str(&format!("{}<br>", line));
+            } else {
+                result.push_str(line);
+            }
+        }
+        result
     }
 }
 
