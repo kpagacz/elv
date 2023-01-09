@@ -2,7 +2,7 @@
 [package]
 name = "elv"
 description = "A little CLI helper for Advent of Code. 🎄"
-version = "0.11.2"
+version = "0.11.3"
 edition = "2021"
 readme = "README.md"
 license-file = "LICENSE"
@@ -29,7 +29,7 @@ toml = "0.5.9"
 serde_cbor = "0.11.2"
 chrono = { version = "0.4.23", features = ["serde"] }
 clap = { version = "4.0.29", features = ["derive", "unicode"] }
-html2text = "0.4.4"
+html2text = "0.4.5"
 
 [target.x86_64-unknown-linux-musl.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
