@@ -34,7 +34,7 @@ impl InputCache {
     pub fn load(year: u16, day: u8) -> Result<String> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
-            bail!(ErrorKind::CacheFailure(format!(
+            bail!(ErrorKind::NoCacheFound(format!(
                 "No cached input for {}-{:02}",
                 year, day
             )));

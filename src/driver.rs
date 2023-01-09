@@ -35,7 +35,17 @@ impl Driver {
 
         match InputCache::load(year, day) {
             Ok(input) => return Ok(input),
-            Err(e) => eprintln!("Failed loading the input from the cache. Cause:\n    {}", e),
+            Err(e) => match e {
+                Error(ErrorKind::NoCacheFound(message), _) => {
+                    eprintln!("{}. Attempting to download it from the server...", message);
+                }
+                Error(ErrorKind::CacheFailure(_), _) => {
+                    bail!("Cache corrupted. Clear the cache and try again.");
+                }
+                _ => {
+                    eprintln!("Failed to load the input from the cache: {}", e);
+                }
+            },
         };
 
         let aoc_api = AocApi::new(&self.configuration);

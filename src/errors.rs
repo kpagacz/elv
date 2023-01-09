@@ -14,6 +14,10 @@ error_chain! {
       description("A cache operation failed")
       display("{}", reason)
     }
+    NoCacheFound(reason: String) {
+      description("No cache found")
+      display("{}", reason)
+    }
   }
   // skip_msg_variant
 }
