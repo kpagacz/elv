@@ -18,22 +18,24 @@ impl fmt::Display for DurationString {
         if duration.num_seconds() <= 0 {
             return write!(f, "0 seconds");
         }
+        let mut duration_strings: Vec<String> = Vec::new();
         if duration.num_days() > 0 {
-            write!(f, "{} days", duration.num_days())?;
+            duration_strings.push(format!("{} days", duration.num_days()));
             duration = duration - chrono::Duration::days(duration.num_days());
         }
         if duration.num_hours() > 0 {
-            write!(f, " {} hours", duration.num_hours())?;
+            duration_strings.push(format!("{} hours", duration.num_hours()));
             duration = duration - chrono::Duration::hours(duration.num_hours());
         }
         if duration.num_minutes() > 0 {
-            write!(f, " {} minutes", duration.num_minutes())?;
+            duration_strings.push(format!("{} minutes", duration.num_minutes()));
             duration = duration - chrono::Duration::minutes(duration.num_minutes());
         }
         if duration.num_seconds() > 0 {
-            write!(f, " {} seconds", duration.num_seconds())?;
+            duration_strings.push(format!("{} seconds", duration.num_seconds()));
         }
-        write!(f, "")
+        let duration_string = duration_strings.join(" ");
+        write!(f, "{}", duration_string)
     }
 }
 
