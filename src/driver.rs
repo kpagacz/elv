@@ -55,7 +55,7 @@ impl Driver {
                 eprintln!("Failed saving the input to the cache");
             }
         } else {
-            bail!("Failed to get the input: {}", input.body);
+            bail!("{}", input.body);
         }
         Ok(input.body)
     }

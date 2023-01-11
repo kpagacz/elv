@@ -85,7 +85,7 @@ fn main() {
                     }
                 }
             }
-            Err(e) => panic!("Error when getting the input: {}", e.description()),
+            Err(e) => eprintln!("❗️ Error when getting the input:\n\t{}", e.description()),
         }
     }
 

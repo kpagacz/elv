@@ -42,15 +42,21 @@ impl<'a> AocApi<'a> {
             Err(_) => return InputResponse::failed(),
         };
         if response.status() != StatusCode::OK {
-            return InputResponse::failed();
+            return InputResponse::new(
+                "Got a non-200 status code from the server. Is your token up to date?".to_owned(),
+                ResponseStatus::Error,
+            );
         }
         let mut body = String::new();
         if response.read_to_string(&mut body).is_err() {
-            return InputResponse::failed();
+            return InputResponse::new(
+                "Failed to read the response body".to_owned(),
+                ResponseStatus::Error,
+            );
         }
         if body.starts_with("Please don't repeatedly request this") {
             return InputResponse::new(
-                "You have to wait for the input to be available".to_string(),
+                "You have to wait for the input to be available".to_owned(),
                 ResponseStatus::TooSoon,
             );
         }
@@ -176,10 +182,6 @@ impl<'a> AocApi<'a> {
         )
     }
 
-    fn get_aoc_answer_selector() -> Selector {
-        Selector::parse("main > article > p").unwrap()
-    }
-
     fn extract_wait_time_from_message(message: &str) -> std::time::Duration {
         let please_wait_marker = "lease wait ";
         let please_wait_position = match message.find(please_wait_marker) {
@@ -194,6 +196,10 @@ impl<'a> AocApi<'a> {
         } else {
             std::time::Duration::from_secs(60 * minutes.parse::<u64>().unwrap_or(0))
         }
+    }
+
+    fn get_aoc_answer_selector() -> Selector {
+        Selector::parse("main > article > p").unwrap()
     }
 
     fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String> {

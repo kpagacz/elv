@@ -10,6 +10,7 @@ test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch
 3.  [Uninstallation](#uninstallation){#toc-uninstallation}
 4.  [Examples](#examples){#toc-examples}
 5.  [FAQ](#faq){#toc-faq}
+6.  [Configuration] (#configuration){#toc-configuration}
 
 ## Introduction
 
@@ -274,3 +275,28 @@ All the directories `elv` uses can be listed by running:
 ```console
 elv list-dirs
 ```
+
+## Configuration
+
+The application suppports a number of parameters in the configuration file.
+You can find the configuration file by invoking:
+
+### Configuration file
+
+```console
+elv list-dirs
+# cache: /Users/konradpagacz/Library/Caches/elv
+# config: /Users/konradpagacz/Library/Application Support/elv
+```
+
+which prints the paths used by `elv` on your machine. Track down the one
+named `config` and open the `.config` file inside the directory.
+
+### Configuration parameters
+
+The configuration file is written in `TOML`. You can set the following values
+
+- `aoc.token` - the token used by the application to authenticate you while
+  connecting to `AOC` servers
+- `cli.output_width` - the column width of the output when calling
+  `elv description`

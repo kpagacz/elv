@@ -78,7 +78,7 @@ impl Configuration {
     }
 
     pub fn get_project_directories() -> ProjectDirs {
-        ProjectDirs::from("", "", "aoc-elf").expect("Failed to get the project directories")
+        ProjectDirs::from("", "", "elv").expect("Failed to get the project directories")
     }
 
     fn write_default_config() -> Result<()> {
