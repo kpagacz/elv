@@ -111,7 +111,7 @@ fn main() {
         let driver = Driver::new(get_configuration(configuration_builder));
         match driver.get_description(year, day) {
             Ok(description) => println!("{}", description),
-            Err(e) => panic!("Error when getting the description: {}", e.description()),
+            Err(e) => eprintln!("Error when getting the description: {}", e.description()),
         }
     }
 
@@ -123,7 +123,7 @@ fn main() {
                     println!("{}: {}", name, path);
                 }
             }
-            Err(e) => panic!("Error when listing the directories: {}", e.description()),
+            Err(e) => eprintln!("Error when listing the directories: {}", e.description()),
         }
     }
 

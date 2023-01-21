@@ -1,5 +1,3 @@
-use std::fmt;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DurationString {
     pub duration: chrono::Duration,
@@ -11,8 +9,8 @@ impl DurationString {
     }
 }
 
-impl fmt::Display for DurationString {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for DurationString {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         // pretty print the duration
         let mut duration = self.duration;
         if duration.num_seconds() <= 0 {

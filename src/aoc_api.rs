@@ -1,20 +1,17 @@
-use crate::aoc_domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
-use crate::configuration::Configuration;
-use crate::errors::*;
-use error_chain::bail;
-use reqwest::blocking::Client;
-use reqwest::header::{CONTENT_TYPE, ORIGIN};
-use reqwest::StatusCode;
-use reqwest::{cookie::Jar, Url};
-use scraper::{Html, Selector};
 use std::io::Read;
-use std::sync::Arc;
+
+use crate::domain::{
+    errors::*, Description, RiddlePart, Submission, SubmissionResult, SubmissionStatus,
+};
+use crate::infrastructure::{CliDisplay, Configuration, HttpDescription};
+use error_chain::bail;
+use reqwest::header::{CONTENT_TYPE, ORIGIN};
 
 const AOC_URL: &str = "https://adventofcode.com";
 
 #[derive(Debug)]
 pub struct AocApi<'a> {
-    http_client: Client,
+    http_client: reqwest::blocking::Client,
     configuration: &'a Configuration,
 }
 
@@ -27,7 +24,7 @@ impl<'a> AocApi<'a> {
     }
 
     pub fn get_input(&self, year: &u16, day: &u8) -> InputResponse {
-        let url = match Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
+        let url = match reqwest::Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
             Ok(url) => url,
             Err(_) => {
                 return InputResponse::new(
@@ -41,7 +38,7 @@ impl<'a> AocApi<'a> {
             Ok(response) => response,
             Err(_) => return InputResponse::failed(),
         };
-        if response.status() != StatusCode::OK {
+        if response.status() != reqwest::StatusCode::OK {
             return InputResponse::new(
                 "Got a non-200 status code from the server. Is your token up to date?".to_owned(),
                 ResponseStatus::Error,
@@ -64,7 +61,7 @@ impl<'a> AocApi<'a> {
     }
 
     pub fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult> {
-        let url = Url::parse(&format!(
+        let url = reqwest::Url::parse(&format!(
             "{}/{}/day/{}/answer",
             AOC_URL, submission.year, submission.day
         ))?;
@@ -128,44 +125,25 @@ impl<'a> AocApi<'a> {
 
     /// Queries the Advent of Code website for the description of a riddle
     /// for a given day and year and returns it as a formatted string.
-    pub fn get_description(&self, year: &u16, day: &u8) -> Result<String> {
-        let url = Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))
+    pub fn get_description(&self, year: &u16, day: &u8) -> Result<HttpDescription> {
+        let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))
             .chain_err(|| "Failed to form the url for the description")?;
-        let mut response = self
+        Ok(self
             .http_client
             .get(url)
             .send()
-            .chain_err(|| "Failed to get the response from the AoC server")?;
-
-        if !response.status().is_success() {
-            bail!("HTTP error. Status code: {}", response.status());
-        }
-
-        let mut body = String::new();
-        response
-            .read_to_string(&mut body)
-            .chain_err(|| "Failed to read the response body")?;
-        let description_selector = Selector::parse(".day-desc").unwrap();
-        let description = Html::parse_document(&body)
-            .select(&description_selector)
-            .map(|e| e.inner_html())
-            .collect::<Vec<_>>()
-            .join("\n");
-        Ok(html2text::from_read_with_decorator(
-            description.as_bytes(),
-            self.configuration.cli.output_width,
-            html2text::render::text_renderer::TrivialDecorator::new(),
-        ))
+            .chain_err(|| "Failed to get the response from the AoC server")?
+            .try_into()?)
     }
 
-    fn prepare_http_client(configuration: &Configuration) -> Client {
+    fn prepare_http_client(configuration: &Configuration) -> reqwest::blocking::Client {
         let cookie = format!("session={}", configuration.aoc.token);
-        let url = AOC_URL.parse::<Url>().expect("Invalid URL");
-        let jar = Jar::default();
+        let url = AOC_URL.parse::<reqwest::Url>().expect("Invalid URL");
+        let jar = reqwest::cookie::Jar::default();
         jar.add_cookie_str(&cookie, &url);
 
-        Client::builder()
-            .cookie_provider(Arc::new(jar))
+        reqwest::blocking::Client::builder()
+            .cookie_provider(std::sync::Arc::new(jar))
             .user_agent(Self::aoc_elf_user_agent())
             .build()
             .chain_err(|| "Failed to create HTTP client")
@@ -198,12 +176,12 @@ impl<'a> AocApi<'a> {
         }
     }
 
-    fn get_aoc_answer_selector() -> Selector {
-        Selector::parse("main > article > p").unwrap()
+    fn get_aoc_answer_selector() -> scraper::Selector {
+        scraper::Selector::parse("main > article > p").unwrap()
     }
 
     fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String> {
-        let document: Html = Html::parse_document(body);
+        let document = scraper::Html::parse_document(body);
         let answer = document
             .select(&Self::get_aoc_answer_selector())
             .next()

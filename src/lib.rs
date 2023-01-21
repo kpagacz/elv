@@ -1,14 +1,12 @@
 mod aoc_api;
-mod aoc_domain;
-mod cli;
-mod configuration;
+mod application;
+mod domain;
 mod driver;
-mod duration_string;
-mod errors;
+mod infrastructure;
 mod input_cache;
 mod submission_history;
 
-pub use crate::cli::cli_command::CliCommand;
-pub use crate::cli::cli_interface::CliInterface;
-pub use crate::configuration::Configuration;
+pub use crate::application::cli::CliCommand;
+pub use crate::application::cli::CliInterface;
 pub use crate::driver::Driver;
+pub use crate::infrastructure::Configuration;

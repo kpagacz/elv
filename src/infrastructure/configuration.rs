@@ -1,11 +1,6 @@
-use directories::ProjectDirs;
-use serde::{Deserialize, Serialize};
-use std::fs;
+use crate::domain::errors::*;
 
-use crate::errors::*;
-use config::{builder::DefaultState, Config, ConfigBuilder, Environment, File, FileFormat::Toml};
-
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct AocConfiguration {
     #[serde(default = "default_token")]
     pub token: String,
@@ -23,7 +18,7 @@ fn default_token() -> String {
     "".to_string()
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct CliConfiguration {
     pub output_width: usize,
 }
@@ -34,7 +29,7 @@ impl Default for CliConfiguration {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
 pub struct Configuration {
     #[serde(default)]
     pub aoc: AocConfiguration,
@@ -51,7 +46,7 @@ impl Configuration {
         }
     }
 
-    pub fn builder() -> ConfigBuilder<DefaultState> {
+    pub fn builder() -> config::ConfigBuilder<config::builder::DefaultState> {
         let project_dirs = Self::get_project_directories();
         if !project_dirs.config_dir().join(".config").exists()
             && Self::write_default_config().is_err()
@@ -61,24 +56,27 @@ impl Configuration {
                 project_dirs.config_dir().join(".config").display()
             );
             println!("Using default configuration");
-            return ConfigBuilder::default();
+            return config::ConfigBuilder::default();
         }
 
-        let builder = Config::builder()
+        let builder = config::Config::builder()
             .add_source(
-                File::with_name(project_dirs.config_dir().join(".config").to_str().unwrap())
-                    .format(Toml),
+                config::File::with_name(
+                    project_dirs.config_dir().join(".config").to_str().unwrap(),
+                )
+                .format(config::FileFormat::Toml),
             )
             .add_source(
-                Environment::with_prefix("AOC")
+                config::Environment::with_prefix("AOC")
                     .separator("_")
                     .keep_prefix(true),
             );
         builder
     }
 
-    pub fn get_project_directories() -> ProjectDirs {
-        ProjectDirs::from("", "", "elv").expect("Failed to get the project directories")
+    pub fn get_project_directories() -> directories::ProjectDirs {
+        directories::ProjectDirs::from("", "", "elv")
+            .expect("Failed to get the project directories")
     }
 
     fn write_default_config() -> Result<()> {
@@ -88,7 +86,7 @@ impl Configuration {
         let prefix = config_path.parent().unwrap();
         std::fs::create_dir_all(prefix)?;
         let toml_string = toml::to_string(&default_config)?;
-        fs::write(config_path, toml_string)?;
+        std::fs::write(config_path, toml_string)?;
         Ok(())
     }
 }

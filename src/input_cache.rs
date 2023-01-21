@@ -1,4 +1,4 @@
-use crate::errors::*;
+use crate::domain::errors::*;
 use crate::Configuration;
 use error_chain::bail;
 
@@ -63,7 +63,7 @@ impl InputCache {
 #[cfg(test)]
 mod tests {
     use super::InputCache;
-    use crate::errors::*;
+    use crate::domain::errors::*;
 
     #[test]
     fn cache_tests() -> Result<()> {

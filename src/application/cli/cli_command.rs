@@ -51,7 +51,7 @@ pub enum CliCommand {
         /// The part of the challenge
         ///
         /// This argument is required. It must be either "one" or "two".
-        part: crate::aoc_domain::RiddlePart,
+        part: crate::domain::RiddlePart,
 
         /// The answer to the challenge
         ///
