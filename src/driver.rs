@@ -1,13 +1,11 @@
 use std::collections::HashMap;
 
-use crate::errors::*;
 use chrono::TimeZone;
 use error_chain::bail;
 
 use crate::aoc_api::{AocApi, ResponseStatus};
-use crate::aoc_domain::{Submission, SubmissionStatus};
-use crate::configuration::Configuration;
-use crate::duration_string::DurationString;
+use crate::domain::{errors::*, DurationString, Submission, SubmissionStatus};
+use crate::infrastructure::{CliDisplay, Configuration};
 use crate::input_cache::InputCache;
 use crate::submission_history::SubmissionHistory;
 
@@ -64,7 +62,7 @@ impl Driver {
         &self,
         year: u16,
         day: u8,
-        part: crate::aoc_domain::RiddlePart,
+        part: crate::domain::RiddlePart,
         answer: String,
     ) -> Result<()> {
         let aoc_api = AocApi::new(&self.configuration);
@@ -137,7 +135,9 @@ impl Driver {
     /// Returns the description of the riddles
     pub fn get_description(&self, year: u16, day: u8) -> Result<String> {
         let aoc_api = AocApi::new(&self.configuration);
-        Ok(aoc_api.get_description(&year, &day)?)
+        Ok(aoc_api
+            .get_description(&year, &day)?
+            .cli_fmt(&self.configuration))
     }
 
     fn is_input_released_yet(

@@ -1,12 +1,9 @@
-use crate::aoc_domain::{RiddlePart, SubmissionStatus};
-use crate::errors::*;
 use crate::{
-    aoc_domain::{Submission, SubmissionResult},
-    configuration::Configuration,
+    domain::{errors::*, RiddlePart, Submission, SubmissionResult, SubmissionStatus},
+    infrastructure::Configuration,
 };
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct SubmissionHistory {
     submissions: Vec<SubmissionResult>,
     year: u16,
@@ -136,7 +133,7 @@ impl SubmissionHistory {
 #[cfg(test)]
 mod tests {
     use super::SubmissionHistory;
-    use crate::aoc_domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
+    use crate::domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 
     #[test]
     fn can_add_submission() {
