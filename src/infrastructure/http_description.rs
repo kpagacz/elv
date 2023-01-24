@@ -10,6 +10,7 @@ pub struct HttpDescription {
     day: u8,
     body: String,
 }
+
 impl HttpDescription {
     fn part_one(&self) -> Option<String> {
         let part_one_selector = scraper::Selector::parse(".day-desc").unwrap();
@@ -90,7 +91,23 @@ impl Description for HttpDescription {
 
 impl std::fmt::Display for HttpDescription {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        let description = [
+            self.part_one(),
+            self.part_one_answer(),
+            self.part_two(),
+            self.part_two_answer(),
+        ]
+        .iter()
+        .filter(|part| part.is_some())
+        .map(|part| part.as_deref().unwrap())
+        .collect::<Vec<_>>()
+        .join("\n");
+
+        f.write_str(&html2text::from_read_with_decorator(
+            description.as_bytes(),
+            200,
+            html2text::render::text_renderer::TrivialDecorator::new(),
+        ))
     }
 }
 

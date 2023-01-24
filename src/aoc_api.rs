@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::domain::{errors::*, RiddlePart, Submission, SubmissionResult, SubmissionStatus, Description};
+use crate::domain::{errors::*, RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 use crate::infrastructure::{Configuration, HttpDescription};
 use error_chain::bail;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
