@@ -1,9 +1,7 @@
 use std::io::Read;
 
-use crate::domain::{
-    errors::*, Description, RiddlePart, Submission, SubmissionResult, SubmissionStatus,
-};
-use crate::infrastructure::{CliDisplay, Configuration, HttpDescription};
+use crate::domain::{errors::*, RiddlePart, Submission, SubmissionResult, SubmissionStatus, Description};
+use crate::infrastructure::{Configuration, HttpDescription};
 use error_chain::bail;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
 

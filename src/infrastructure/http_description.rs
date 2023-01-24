@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use crate::{
     domain::{errors::*, Description},
     Configuration,
@@ -13,20 +11,38 @@ pub struct HttpDescription {
     body: String,
 }
 impl HttpDescription {
-    fn partOne(&self) -> Option<&str> {
-        todo!()
+    fn part_one(&self) -> Option<String> {
+        let part_one_selector = scraper::Selector::parse(".day-desc").unwrap();
+        let binding = scraper::Html::parse_document(&self.body);
+        let select = binding.select(&part_one_selector);
+        select.map(|e| e.inner_html()).next()
     }
 
-    fn partOneAnswer(&self) -> Option<&str> {
-        todo!()
+    fn part_one_answer(&self) -> Option<String> {
+        let part_one_answer_selector = scraper::Selector::parse("main > p").unwrap();
+        let binding = scraper::Html::parse_document(&self.body);
+        binding
+            .select(&part_one_answer_selector)
+            .map(|e| e.inner_html())
+            .find(|html| html.starts_with("Your puzzle answer was"))
     }
 
-    fn partTwo(&self) -> Option<&str> {
-        todo!()
+    fn part_two(&self) -> Option<String> {
+        let part_one_selector = scraper::Selector::parse(".day-desc").unwrap();
+        let binding = scraper::Html::parse_document(&self.body);
+        let select = binding.select(&part_one_selector);
+        select.map(|e| e.inner_html()).skip(1).next()
     }
 
-    fn partTwoAnswer(&self) -> Option<&str> {
-        todo!()
+    fn part_two_answer(&self) -> Option<String> {
+        let part_one_answer_selector = scraper::Selector::parse("main > p").unwrap();
+        let binding = scraper::Html::parse_document(&self.body);
+        binding
+            .select(&part_one_answer_selector)
+            .map(|e| e.inner_html())
+            .filter(|html| html.starts_with("Your puzzle answer was"))
+            .skip(1)
+            .next()
     }
 }
 
@@ -80,14 +96,17 @@ impl std::fmt::Display for HttpDescription {
 
 impl CliDisplay for HttpDescription {
     fn cli_fmt(&self, configuration: &Configuration) -> String {
-        let description_selector = scraper::Selector::parse(".day-desc").unwrap();
-        let binding = scraper::Html::parse_document(&self.body);
-        let select = binding.select(&description_selector);
-        println!("{:?}", self.body);
-        let description = select
-            .map(|e| e.inner_html())
-            .collect::<Vec<_>>()
-            .join("\n");
+        let description = [
+            self.part_one(),
+            self.part_one_answer(),
+            self.part_two(),
+            self.part_two_answer(),
+        ]
+        .iter()
+        .filter(|part| part.is_some())
+        .map(|part| part.as_deref().unwrap())
+        .collect::<Vec<_>>()
+        .join("\n");
         html2text::from_read_with_decorator(
             description.as_bytes(),
             configuration.cli.output_width,
