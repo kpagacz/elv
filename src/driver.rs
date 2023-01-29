@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use chrono::TimeZone;
 use error_chain::bail;
 
-use crate::aoc_api::{AocApi, ResponseStatus};
-use crate::domain::{errors::*, DurationString, Submission, SubmissionStatus};
-use crate::infrastructure::{CliDisplay, Configuration};
-use crate::input_cache::InputCache;
+use crate::domain::ports::InputCache;
+use crate::domain::{errors::*, ports::AocClient, DurationString, Submission, SubmissionStatus};
+use crate::infrastructure::http::aoc_api::{AocApi, ResponseStatus};
+use crate::infrastructure::FileInputCache;
+use crate::infrastructure::{CliDisplay, Configuration, HttpDescription};
 use crate::submission_history::SubmissionHistory;
 
 #[derive(Debug, Default)]
@@ -31,7 +32,7 @@ impl Driver {
             bail!("The input is not released yet");
         }
 
-        match InputCache::load(year, day) {
+        match FileInputCache::load(year, day) {
             Ok(input) => return Ok(input),
             Err(e) => match e {
                 Error(ErrorKind::NoCacheFound(message), _) => {
@@ -49,7 +50,7 @@ impl Driver {
         let aoc_api = AocApi::new(&self.configuration);
         let input = aoc_api.get_input(&year, &day);
         if input.status == ResponseStatus::Ok {
-            if InputCache::cache(&input.body, year, day).is_err() {
+            if FileInputCache::save(&input.body, year, day).is_err() {
                 eprintln!("Failed saving the input to the cache");
             }
         } else {
@@ -127,7 +128,7 @@ impl Driver {
     }
 
     pub fn clear_cache(&self) -> Result<()> {
-        InputCache::clear().chain_err(|| "Failed to clear the input cache")?;
+        FileInputCache::clear().chain_err(|| "Failed to clear the input cache")?;
         SubmissionHistory::clear().chain_err(|| "Failed to clear the submission history cache")?;
         Ok(())
     }
@@ -136,7 +137,7 @@ impl Driver {
     pub fn get_description(&self, year: u16, day: u8) -> Result<String> {
         let aoc_api = AocApi::new(&self.configuration);
         Ok(aoc_api
-            .get_description(&year, &day)?
+            .get_description::<HttpDescription>(&year, &day)?
             .cli_fmt(&self.configuration))
     }
 
