@@ -10,7 +10,7 @@ test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch
 3.  [Uninstallation](#uninstallation){#toc-uninstallation}
 4.  [Examples](#examples){#toc-examples}
 5.  [FAQ](#faq){#toc-faq}
-6.  [Configuration] (#configuration){#toc-configuration}
+6.  [Configuration](#configuration){#toc-configuration}
 
 ## Introduction
 
