@@ -1,18 +1,21 @@
 use crate::domain::errors::*;
+use crate::domain::ports::InputCache;
 use crate::Configuration;
 use error_chain::bail;
 
-pub struct InputCache {}
+pub struct FileInputCache;
 
-impl InputCache {
+impl FileInputCache {
     fn cache_path(year: u16, day: u8) -> std::path::PathBuf {
         Configuration::get_project_directories()
             .cache_dir()
             .join("inputs")
             .join(format!("input-{}-{:02}", year, day))
     }
+}
 
-    pub fn cache(input: &str, year: u16, day: u8) -> Result<()> {
+impl InputCache for FileInputCache {
+    fn save(input: &str, year: u16, day: u8) -> Result<()> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
             std::fs::create_dir_all(cache_path.parent().unwrap()).chain_err(|| {
@@ -31,7 +34,7 @@ impl InputCache {
         Ok(())
     }
 
-    pub fn load(year: u16, day: u8) -> Result<String> {
+    fn load(year: u16, day: u8) -> Result<String> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
             bail!(ErrorKind::NoCacheFound(format!(
@@ -48,7 +51,7 @@ impl InputCache {
         }
     }
 
-    pub fn clear() -> Result<()> {
+    fn clear() -> Result<()> {
         let binding = Configuration::get_project_directories();
         let cache_dir = binding.cache_dir().join("inputs");
         if cache_dir.exists() {
@@ -62,20 +65,20 @@ impl InputCache {
 
 #[cfg(test)]
 mod tests {
-    use super::InputCache;
-    use crate::domain::errors::*;
+    use super::FileInputCache;
+    use crate::domain::{errors::*, ports::InputCache};
 
     #[test]
     fn cache_tests() -> Result<()> {
         let input = "test input";
         let year = 1000;
         let day = 1;
-        InputCache::cache(input, year, day)?;
-        let cached_input = InputCache::load(year, day)?;
+        FileInputCache::save(input, year, day)?;
+        let cached_input = FileInputCache::load(year, day)?;
         assert_eq!(input, cached_input);
 
-        InputCache::clear()?;
-        assert!(InputCache::load(year, day).is_err());
+        FileInputCache::clear()?;
+        assert!(FileInputCache::load(year, day).is_err());
 
         Ok(())
     }

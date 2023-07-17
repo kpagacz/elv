@@ -215,6 +215,47 @@ elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 input
 # downloads the input for the riddle published on the 1st of December 2021
 ```
 
+### Submitting the solution
+
+#### Submitting the solution for today's riddle
+
+This works only while the event is being held, not all the time of the
+year. While the event is not held, you need to specify the year and day
+of the challenge explicitly using `-y' and`-d' parameters.
+
+```console
+elv -t <YOUR SESSION TOKEN> submit one <SOLUTION>
+elv -t <YOUR SESSION TOKEN> submit two <SOLUTION>
+```
+
+#### Submitting the solution for a particular riddle
+
+You specify the day and the year of the riddle.
+
+```console
+elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 submit one <SOLUTION>
+```
+
+### Getting the leaderboard
+
+#### Getting the leaderboard for this year
+
+This works only while the event is being held, not all the time of the
+year. While the event is not held, you need to specify the year
+explicitly using `-y' parameter.
+
+```console
+elv -t <YOUR SESSION TOKEN> leaderboard
+```
+
+#### Getting the leaderboard for a particular year
+
+You specify the year of the leaderboard.
+
+```console
+elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 leaderboard
+```
+
 ## FAQ
 
 ### How can I store the session token?

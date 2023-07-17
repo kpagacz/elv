@@ -1,27 +1,13 @@
-use std::io::Read;
-
-use crate::domain::{errors::*, RiddlePart, Submission, SubmissionResult, SubmissionStatus};
-use crate::infrastructure::{Configuration, HttpDescription};
+use super::{AocApi, AOC_URL};
+use crate::domain::{
+    errors::*, ports::AocClient, RiddlePart, Submission, SubmissionResult, SubmissionStatus,
+};
 use error_chain::bail;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
+use std::io::Read;
 
-const AOC_URL: &str = "https://adventofcode.com";
-
-#[derive(Debug)]
-pub struct AocApi<'a> {
-    http_client: reqwest::blocking::Client,
-    configuration: &'a Configuration,
-}
-
-impl<'a> AocApi<'a> {
-    pub fn new(configuration: &'a Configuration) -> AocApi<'a> {
-        Self {
-            http_client: Self::prepare_http_client(configuration),
-            configuration,
-        }
-    }
-
-    pub fn get_input(&self, year: &u16, day: &u8) -> InputResponse {
+impl AocClient for AocApi {
+    fn get_input(&self, year: &u16, day: &u8) -> InputResponse {
         let url = match reqwest::Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
             Ok(url) => url,
             Err(_) => {
@@ -34,7 +20,9 @@ impl<'a> AocApi<'a> {
         };
         let mut response = match self.http_client.get(url).send() {
             Ok(response) => response,
-            Err(_) => return InputResponse::failed(),
+            Err(_) => {
+                return InputResponse::new("Failed to get input".to_string(), ResponseStatus::Error)
+            }
         };
         if response.status() != reqwest::StatusCode::OK {
             return InputResponse::new(
@@ -58,7 +46,7 @@ impl<'a> AocApi<'a> {
         InputResponse::new(body, ResponseStatus::Ok)
     }
 
-    pub fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult> {
+    fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult> {
         let url = reqwest::Url::parse(&format!(
             "{}/{}/day/{}/answer",
             AOC_URL, submission.year, submission.day
@@ -123,72 +111,20 @@ impl<'a> AocApi<'a> {
 
     /// Queries the Advent of Code website for the description of a riddle
     /// for a given day and year and returns it as a formatted string.
-    pub fn get_description(&self, year: &u16, day: &u8) -> Result<HttpDescription> {
+    fn get_description<HttpDescription: std::convert::TryFrom<reqwest::blocking::Response>>(
+        &self,
+        year: &u16,
+        day: &u8,
+    ) -> Result<HttpDescription> {
         let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))
             .chain_err(|| "Failed to form the url for the description")?;
         Ok(self
             .http_client
             .get(url)
             .send()
-            .chain_err(|| "Failed to get the response from the AoC server")?
-            .try_into()?)
-    }
-
-    fn prepare_http_client(configuration: &Configuration) -> reqwest::blocking::Client {
-        let cookie = format!("session={}", configuration.aoc.token);
-        let url = AOC_URL.parse::<reqwest::Url>().expect("Invalid URL");
-        let jar = reqwest::cookie::Jar::default();
-        jar.add_cookie_str(&cookie, &url);
-
-        reqwest::blocking::Client::builder()
-            .cookie_provider(std::sync::Arc::new(jar))
-            .user_agent(Self::aoc_elf_user_agent())
-            .build()
-            .chain_err(|| "Failed to create HTTP client")
-            .unwrap()
-    }
-
-    fn aoc_elf_user_agent() -> String {
-        let pkg_name: &str = env!("CARGO_PKG_NAME");
-        let pkg_version: &str = env!("CARGO_PKG_VERSION");
-
-        format!(
-            "{}/{} (+{} author:{})",
-            pkg_name, pkg_version, "https://github.com/kpagacz/elv", "konrad.pagacz@gmail.com"
-        )
-    }
-
-    fn extract_wait_time_from_message(message: &str) -> std::time::Duration {
-        let please_wait_marker = "lease wait ";
-        let please_wait_position = match message.find(please_wait_marker) {
-            Some(position) => position,
-            None => return std::time::Duration::new(0, 0),
-        };
-        let minutes_position = please_wait_position + please_wait_marker.len();
-        let next_space_position = message[minutes_position..].find(' ').unwrap();
-        let minutes = &message[minutes_position..minutes_position + next_space_position];
-        if minutes == "one" {
-            std::time::Duration::from_secs(60)
-        } else {
-            std::time::Duration::from_secs(60 * minutes.parse::<u64>().unwrap_or(0))
-        }
-    }
-
-    fn get_aoc_answer_selector() -> scraper::Selector {
-        scraper::Selector::parse("main > article > p").unwrap()
-    }
-
-    fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String> {
-        let document = scraper::Html::parse_document(body);
-        let answer = document
-            .select(&Self::get_aoc_answer_selector())
-            .next()
-            .chain_err(|| "Failed to parse the answer")?;
-        let answer_text = html2text::from_read(
-            answer.text().collect::<Vec<_>>().join("").as_bytes(),
-            self.configuration.cli.output_width,
-        );
-        Ok(answer_text)
+            .map_err(|_e| "Failed to get the response from the AoC server")?
+            .try_into()
+            .map_err(|_e| "Failed to parse the description from the AoC servers' response")?)
     }
 }
 
@@ -209,14 +145,12 @@ impl InputResponse {
     pub fn new(body: String, status: ResponseStatus) -> Self {
         Self { body, status }
     }
-
-    pub fn failed() -> Self {
-        Self::new("Failed to get input".to_string(), ResponseStatus::Error)
-    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::Configuration;
+
     use super::*;
 
     #[test]
@@ -243,7 +177,8 @@ mod tests {
 </main>"#;
 
         let configuration = Configuration::default();
-        let api = AocApi::new(&configuration);
+        let api_client = AocApi::prepare_http_client(&configuration);
+        let api = AocApi::new(api_client, configuration);
         let message = api.parse_submission_answer_body(body).unwrap();
         assert_eq!(message, "That's the right answer! You are one gold star closer to saving your vacation. [Continue to Part Two]\n");
     }
@@ -262,7 +197,8 @@ mod tests {
         "#;
 
         let configuration = Configuration::default();
-        let api = AocApi::new(&configuration);
+        let http_client = AocApi::prepare_http_client(&configuration);
+        let api = AocApi::new(http_client, configuration);
         let message = api.parse_submission_answer_body(body).unwrap();
         assert_eq!(message, concat!(
             "That's not the right answer. If you're stuck, make sure you're using the full input data; there are also some general\n",

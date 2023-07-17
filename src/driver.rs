@@ -3,10 +3,12 @@ use std::collections::HashMap;
 use chrono::TimeZone;
 use error_chain::bail;
 
-use crate::aoc_api::{AocApi, ResponseStatus};
+use crate::domain::ports::{AocClient, GetLeaderboard, InputCache};
 use crate::domain::{errors::*, DurationString, Submission, SubmissionStatus};
-use crate::infrastructure::{CliDisplay, Configuration};
-use crate::input_cache::InputCache;
+use crate::infrastructure::aoc_api::aoc_client_impl::ResponseStatus;
+use crate::infrastructure::aoc_api::AocApi;
+use crate::infrastructure::{CliDisplay, FileInputCache};
+use crate::infrastructure::{Configuration, HttpDescription};
 use crate::submission_history::SubmissionHistory;
 
 #[derive(Debug, Default)]
@@ -31,7 +33,7 @@ impl Driver {
             bail!("The input is not released yet");
         }
 
-        match InputCache::load(year, day) {
+        match FileInputCache::load(year, day) {
             Ok(input) => return Ok(input),
             Err(e) => match e {
                 Error(ErrorKind::NoCacheFound(message), _) => {
@@ -46,10 +48,11 @@ impl Driver {
             },
         };
 
-        let aoc_api = AocApi::new(&self.configuration);
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_api = AocApi::new(http_client, self.configuration.clone());
         let input = aoc_api.get_input(&year, &day);
         if input.status == ResponseStatus::Ok {
-            if InputCache::cache(&input.body, year, day).is_err() {
+            if FileInputCache::save(&input.body, year, day).is_err() {
                 eprintln!("Failed saving the input to the cache");
             }
         } else {
@@ -65,7 +68,8 @@ impl Driver {
         part: crate::domain::RiddlePart,
         answer: String,
     ) -> Result<()> {
-        let aoc_api = AocApi::new(&self.configuration);
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_api = AocApi::new(http_client, self.configuration.clone());
 
         let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(&year, &day)
         {
@@ -127,16 +131,17 @@ impl Driver {
     }
 
     pub fn clear_cache(&self) -> Result<()> {
-        InputCache::clear().chain_err(|| "Failed to clear the input cache")?;
+        FileInputCache::clear().chain_err(|| "Failed to clear the input cache")?;
         SubmissionHistory::clear().chain_err(|| "Failed to clear the submission history cache")?;
         Ok(())
     }
 
     /// Returns the description of the riddles
     pub fn get_description(&self, year: u16, day: u8) -> Result<String> {
-        let aoc_api = AocApi::new(&self.configuration);
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
-            .get_description(&year, &day)?
+            .get_description::<HttpDescription>(&year, &day)?
             .cli_fmt(&self.configuration))
     }
 
@@ -179,6 +184,14 @@ impl Driver {
             directories.insert("cache", cache_dir.to_owned());
         }
         Ok(directories)
+    }
+
+    pub fn get_leaderboard(&self, year: u16) -> Result<String> {
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_client = AocApi::new(http_client, self.configuration.clone());
+        let leaderboard = aoc_client.get_leaderboard(year)?;
+
+        Ok(leaderboard.cli_fmt(&self.configuration))
     }
 }
 
