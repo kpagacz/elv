@@ -1,4 +1,4 @@
-pub mod http;
+pub mod aoc_api;
 mod cli_display;
 mod configuration;
 mod http_description;

@@ -1,89 +1,12 @@
-use std::io::Read;
-
-use crate::domain::ports::GetLeaderboard;
-use crate::domain::Leaderboard;
+use super::{AocApi, AOC_URL};
 use crate::domain::{
     errors::*, ports::AocClient, RiddlePart, Submission, SubmissionResult, SubmissionStatus,
 };
-use crate::infrastructure::Configuration;
 use error_chain::bail;
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
+use std::io::Read;
 
-const AOC_URL: &str = "https://adventofcode.com";
-
-#[derive(Debug)]
-pub struct AocApi<'a> {
-    http_client: reqwest::blocking::Client,
-    configuration: &'a Configuration,
-}
-
-impl<'a> AocApi<'a> {
-    pub fn new(configuration: &'a Configuration) -> AocApi<'a> {
-        Self {
-            http_client: Self::prepare_http_client(configuration),
-            configuration,
-        }
-    }
-
-    fn prepare_http_client(configuration: &Configuration) -> reqwest::blocking::Client {
-        let cookie = format!("session={}", configuration.aoc.token);
-        let url = AOC_URL.parse::<reqwest::Url>().expect("Invalid URL");
-        let jar = reqwest::cookie::Jar::default();
-        jar.add_cookie_str(&cookie, &url);
-
-        reqwest::blocking::Client::builder()
-            .cookie_provider(std::sync::Arc::new(jar))
-            .user_agent(Self::aoc_elf_user_agent())
-            .build()
-            .chain_err(|| "Failed to create HTTP client")
-            .unwrap()
-    }
-
-    fn aoc_elf_user_agent() -> String {
-        let pkg_name: &str = env!("CARGO_PKG_NAME");
-        let pkg_version: &str = env!("CARGO_PKG_VERSION");
-
-        format!(
-            "{}/{} (+{} author:{})",
-            pkg_name, pkg_version, "https://github.com/kpagacz/elv", "konrad.pagacz@gmail.com"
-        )
-    }
-
-    fn extract_wait_time_from_message(message: &str) -> std::time::Duration {
-        let please_wait_marker = "lease wait ";
-        let please_wait_position = match message.find(please_wait_marker) {
-            Some(position) => position,
-            None => return std::time::Duration::new(0, 0),
-        };
-        let minutes_position = please_wait_position + please_wait_marker.len();
-        let next_space_position = message[minutes_position..].find(' ').unwrap();
-        let minutes = &message[minutes_position..minutes_position + next_space_position];
-        if minutes == "one" {
-            std::time::Duration::from_secs(60)
-        } else {
-            std::time::Duration::from_secs(60 * minutes.parse::<u64>().unwrap_or(0))
-        }
-    }
-
-    fn get_aoc_answer_selector() -> scraper::Selector {
-        scraper::Selector::parse("main > article > p").unwrap()
-    }
-
-    fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String> {
-        let document = scraper::Html::parse_document(body);
-        let answer = document
-            .select(&Self::get_aoc_answer_selector())
-            .next()
-            .chain_err(|| "Failed to parse the answer")?;
-        let answer_text = html2text::from_read(
-            answer.text().collect::<Vec<_>>().join("").as_bytes(),
-            self.configuration.cli.output_width,
-        );
-        Ok(answer_text)
-    }
-}
-
-impl AocClient for AocApi<'_> {
+impl AocClient for AocApi {
     fn get_input(&self, year: &u16, day: &u8) -> InputResponse {
         let url = match reqwest::Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
             Ok(url) => url,
@@ -205,39 +128,6 @@ impl AocClient for AocApi<'_> {
     }
 }
 
-impl GetLeaderboard for AocApi<'_> {
-    fn get_leaderboard(&self, year: u16) -> Result<Leaderboard> {
-        let url = reqwest::Url::parse(&format!("{}/{}/leaderboard", AOC_URL, year))?;
-        let mut response = self.http_client.get(url).send()?.error_for_status()?;
-        let mut body = String::from("");
-        response.read_to_string(&mut body)?;
-        let leaderboard_entries_selector = scraper::Selector::parse(".leaderboard-entry")
-            .map_err(|_err| "Error when parsing the leaderboard css selector")?;
-        let html = scraper::Html::parse_document(&body);
-        let entries = html
-            .select(&leaderboard_entries_selector)
-            .flat_map(|selected| selected.text())
-            .filter(|&el| !el.ends_with("(AoC++)"))
-            .filter(|&el| el != " ")
-            .filter(|&el| el != "(Sponsor)")
-            .map(|el| {
-                if el.ends_with(")") {
-                    format!("{} ", el.trim_start())
-                } else {
-                    String::from(el)
-                }
-            })
-            .collect::<Vec<_>>();
-        println!("{:?}", entries);
-        let entries = entries
-            .chunks_exact(4)
-            .map(|entry| entry.join(""))
-            .collect::<Vec<_>>();
-        println!("{:?}", entries);
-        todo!();
-    }
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum ResponseStatus {
     Ok,
@@ -259,6 +149,8 @@ impl InputResponse {
 
 #[cfg(test)]
 mod tests {
+    use crate::Configuration;
+
     use super::*;
 
     #[test]
@@ -285,7 +177,8 @@ mod tests {
 </main>"#;
 
         let configuration = Configuration::default();
-        let api = AocApi::new(&configuration);
+        let api_client = AocApi::prepare_http_client(&configuration);
+        let api = AocApi::new(api_client, configuration);
         let message = api.parse_submission_answer_body(body).unwrap();
         assert_eq!(message, "That's the right answer! You are one gold star closer to saving your vacation. [Continue to Part Two]\n");
     }
@@ -304,19 +197,13 @@ mod tests {
         "#;
 
         let configuration = Configuration::default();
-        let api = AocApi::new(&configuration);
+        let http_client = AocApi::prepare_http_client(&configuration);
+        let api = AocApi::new(http_client, configuration);
         let message = api.parse_submission_answer_body(body).unwrap();
         assert_eq!(message, concat!(
             "That's not the right answer. If you're stuck, make sure you're using the full input data; there are also some general\n",
             "tips on the about page, or you can ask for hints on the subreddit. ",
             "Because you have guessed incorrectly 7 times on this\npuzzle, please ",
             "wait 10 minutes before trying again. (You guessed 0.) [Return to Day 1]\n"))
-    }
-
-    #[test]
-    fn get_leaderboards() {
-        let configuration = Configuration::default();
-        let api = AocApi::new(&configuration);
-        api.get_leaderboard(2022);
     }
 }

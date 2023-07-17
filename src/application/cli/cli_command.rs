@@ -59,6 +59,12 @@ pub enum CliCommand {
         answer: String,
     },
 
+    /// Show the leaderboard
+    ///
+    /// This command downloads the leaderboard rankings for a particular year.
+    #[command(visible_aliases = ["l"])]
+    Leaderboard,
+
     /// 🗑️  Clears the cache
     ///
     /// This command will clear the cache of the application. The cache is used

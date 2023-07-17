@@ -46,6 +46,7 @@ fn main() {
             handle_description_command(builder, year.unwrap(), day.unwrap(), width)
         }
         CliCommand::ListDirs => handle_list_dirs_command(builder),
+        CliCommand::Leaderboard => handle_get_leaderboard(builder, year.unwrap()),
     }
 
     fn handle_input_command(
@@ -137,5 +138,13 @@ fn main() {
                 Configuration::new()
             });
         configuration
+    }
+
+    fn handle_get_leaderboard(configuration_builder: ConfigBuilder<DefaultState>, year: u16) {
+        let driver = Driver::new(get_configuration(configuration_builder));
+        match driver.get_leaderboard(year) {
+            Ok(text) => println!("{text}"),
+            Err(e) => eprintln!("Error when getting the leaderboards: {}", e.description()),
+        }
     }
 }

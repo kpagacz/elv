@@ -1,7 +1,7 @@
 use crate::domain::errors::*;
 use crate::domain::Description;
 use crate::domain::{Submission, SubmissionResult};
-use crate::infrastructure::http::aoc_api::InputResponse;
+use crate::infrastructure::aoc_api::aoc_client_impl::InputResponse;
 
 pub trait AocClient {
     fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult>;

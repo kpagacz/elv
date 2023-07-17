@@ -1,6 +1,6 @@
 use crate::domain::errors::*;
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct AocConfiguration {
     #[serde(default = "default_token")]
     pub token: String,
@@ -18,7 +18,7 @@ fn default_token() -> String {
     "".to_string()
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, Copy, serde::Deserialize, serde::Serialize)]
 pub struct CliConfiguration {
     pub output_width: usize,
 }
@@ -29,7 +29,7 @@ impl Default for CliConfiguration {
     }
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
 pub struct Configuration {
     #[serde(default)]
     pub aoc: AocConfiguration,
