@@ -1,4 +1,3 @@
-use crate::domain::errors::*;
 use crate::Configuration;
 
 use super::{AocApi, AOC_URL};
@@ -55,12 +54,12 @@ impl AocApi {
         scraper::Selector::parse("main > article > p").unwrap()
     }
 
-    pub fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String> {
+    pub fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String, anyhow::Error> {
         let document = scraper::Html::parse_document(body);
         let answer = document
             .select(&Self::get_aoc_answer_selector())
             .next()
-            .chain_err(|| "Failed to parse the answer")?;
+            .ok_or(Err("Failed to parse submission answer body"))?;
         let answer_text = html2text::from_read(
             answer.text().collect::<Vec<_>>().join("").as_bytes(),
             self.configuration.cli.output_width,

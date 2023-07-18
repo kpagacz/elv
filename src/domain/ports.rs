@@ -1,4 +1,5 @@
 mod aoc_client;
+mod errors;
 mod get_leaderboard;
 mod input_cache;
 
