@@ -1,3 +1,5 @@
+use anyhow::Context;
+
 use crate::Configuration;
 
 use super::{AocApi, AOC_URL};
@@ -20,8 +22,7 @@ impl AocApi {
             .cookie_provider(std::sync::Arc::new(jar))
             .user_agent(Self::aoc_elf_user_agent())
             .build()
-            .chain_err(|| "Failed to create HTTP client")
-            .unwrap()
+            .expect("Error building the HTTP client")
     }
 
     pub fn aoc_elf_user_agent() -> String {
@@ -59,7 +60,7 @@ impl AocApi {
         let answer = document
             .select(&Self::get_aoc_answer_selector())
             .next()
-            .ok_or(Err("Failed to parse submission answer body"))?;
+            .context("No answer in the parsed body")?;
         let answer_text = html2text::from_read(
             answer.text().collect::<Vec<_>>().join("").as_bytes(),
             self.configuration.cli.output_width,

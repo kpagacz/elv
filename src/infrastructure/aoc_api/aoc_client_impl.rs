@@ -1,4 +1,5 @@
 use super::{AocApi, AOC_URL};
+use crate::domain::ports::AocClientError;
 use crate::domain::{ports::AocClient, RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
 use std::io::Read;
@@ -43,11 +44,12 @@ impl AocClient for AocApi {
         InputResponse::new(body, ResponseStatus::Ok)
     }
 
-    fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult> {
+    fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult, AocClientError> {
         let url = reqwest::Url::parse(&format!(
             "{}/{}/day/{}/answer",
             AOC_URL, submission.year, submission.day
-        ))?;
+        ))
+        .map_err(|e| AocClientError::SubmitAnswerError(e.to_string()))?;
         let mut response = self
             .http_client
             .post(url)
@@ -68,12 +70,13 @@ impl AocClient for AocApi {
                     submission.year, submission.day
                 ),
             )
-            .send()?;
+            .send()
+            .map_err(|e| AocClientError::SubmitAnswerError(e.to_string()))?;
         if !response.status().is_success() {
-            bail!(
-                "Failed to submit the answer. Status code: {}",
+            return Err(AocClientError::SubmitAnswerError(format!(
+                "Status code: {}",
                 response.status()
-            );
+            )));
         }
 
         let mut body = String::new();
@@ -112,16 +115,13 @@ impl AocClient for AocApi {
         &self,
         year: &u16,
         day: &u8,
-    ) -> Result<HttpDescription> {
-        let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))
-            .chain_err(|| "Failed to form the url for the description")?;
-        Ok(self
-            .http_client
+    ) -> Result<HttpDescription, AocClientError> {
+        let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))?;
+        self.http_client
             .get(url)
-            .send()
-            .map_err(|_e| "Failed to get the response from the AoC server")?
+            .send()?
             .try_into()
-            .map_err(|_e| "Failed to parse the description from the AoC servers' response")?)
+            .map_err(|_e| AocClientError::GetDescriptionError)
     }
 }
 

@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::domain::LeaderboardError;
+
 #[derive(Error, Debug)]
 pub enum AocClientError {
     #[error("Failed to get the leaderboard")]
@@ -8,21 +10,24 @@ pub enum AocClientError {
     #[error("Failed to get the description")]
     GetDescriptionError,
 
-    #[error("Failed to get input")]
-    GetInputError,
+    #[error("Failed to submit the answer: {}", 0)]
+    SubmitAnswerError(String),
 
-    #[error("Failed to submit the answer")]
-    SubmitAnswerError,
+    #[error("IO error")]
+    IoErrorr(#[from] std::io::Error),
+
+    #[error("URL parsing")]
+    URLParsingError(#[from] url::ParseError),
+
+    #[error("Runtime error")]
+    RuntimeError(#[from] anyhow::Error),
+
+    #[error("Network error")]
+    NetworkError(#[from] reqwest::Error),
 }
 
-#[derive(Error, Debug)]
-pub enum InputCacheError {
-    #[error("Failed saving to cache")]
-    Save,
-
-    #[error("Failed to load from cache")]
-    Load,
-
-    #[error("Failed to clear the cache")]
-    Clear,
+impl From<LeaderboardError> for AocClientError {
+    fn from(_cause: LeaderboardError) -> Self {
+        Self::GetLeaderboardError
+    }
 }

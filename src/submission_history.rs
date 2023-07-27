@@ -1,7 +1,19 @@
+use thiserror::Error;
+
 use crate::{
-    domain::{errors::*, RiddlePart, Submission, SubmissionResult, SubmissionStatus},
+    domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus},
     infrastructure::Configuration,
 };
+
+#[derive(Error, Debug)]
+pub enum SubmissionHistoryError {
+    #[error("Error loading the data from the submission history cache: {}", 0)]
+    Load(String),
+    #[error("Error saving data to the submission history cache: {}", 0)]
+    Save(String),
+    #[error("Error clearing the submission history cache: {}", 0)]
+    Clear(String),
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct SubmissionHistory {
@@ -25,19 +37,19 @@ impl SubmissionHistory {
             .find(|s| s.submission.part == *part && s.status == SubmissionStatus::Correct)
     }
 
-    pub fn from_cache(year: &u16, day: &u8) -> Result<Self> {
+    pub fn from_cache(year: &u16, day: &u8) -> Result<Self, SubmissionHistoryError> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
             Self::new(*year, *day).save_to_cache()?;
         }
-        let content = std::fs::read(&cache_path).chain_err(|| {
-            ErrorKind::CacheFailure(format!(
+        let content = std::fs::read(&cache_path).map_err(|_| {
+            SubmissionHistoryError::Load(format!(
                 "Failed to read cache file: {}",
                 cache_path.display()
             ))
         })?;
-        serde_cbor::from_slice::<SubmissionHistory>(&content).chain_err(|| {
-            ErrorKind::CacheFailure(format!(
+        serde_cbor::from_slice::<SubmissionHistory>(&content).map_err(|_| {
+            SubmissionHistoryError::Load(format!(
                 "Failed to deserialize cache file: {}",
                 cache_path.display()
             ))
@@ -73,25 +85,25 @@ impl SubmissionHistory {
             .find(|&s| s.submission.eq(submission))
     }
 
-    pub fn save_to_cache(&self) -> Result<()> {
+    pub fn save_to_cache(&self) -> Result<(), SubmissionHistoryError> {
         let cache_path = Self::cache_path(&self.year, &self.day);
         let cache_dir = cache_path.parent().unwrap();
         if !cache_path.exists() {
-            std::fs::create_dir_all(cache_dir).chain_err(|| {
-                ErrorKind::CacheFailure(format!(
+            std::fs::create_dir_all(cache_dir).map_err(|_| {
+                SubmissionHistoryError::Save(format!(
                     "Failed to create cache directory: {}",
                     cache_dir.display()
                 ))
             })?;
         }
-        let serialized = serde_cbor::to_vec(&self).chain_err(|| {
-            ErrorKind::CacheFailure(format!(
+        let serialized = serde_cbor::to_vec(&self).map_err(|_| {
+            SubmissionHistoryError::Save(format!(
                 "Failed to serialize cache file: {}",
                 cache_path.display()
             ))
         })?;
-        std::fs::write(&cache_path, serialized).chain_err(|| {
-            ErrorKind::CacheFailure(format!(
+        std::fs::write(&cache_path, serialized).map_err(|_| {
+            SubmissionHistoryError::Save(format!(
                 "Failed to write cache file: {}",
                 cache_path.display()
             ))
@@ -100,13 +112,13 @@ impl SubmissionHistory {
         Ok(())
     }
 
-    pub fn clear() -> Result<()> {
+    pub fn clear() -> Result<(), SubmissionHistoryError> {
         let cache_dir = Configuration::get_project_directories()
             .cache_dir()
             .join("submissions");
         if cache_dir.exists() {
-            std::fs::remove_dir_all(&cache_dir).chain_err(|| {
-                ErrorKind::CacheFailure(format!(
+            std::fs::remove_dir_all(&cache_dir).map_err(|_| {
+                SubmissionHistoryError::Clear(format!(
                     "Failed to remove cache directory: {}",
                     cache_dir.display()
                 ))

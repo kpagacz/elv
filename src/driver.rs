@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
+use anyhow::Context;
 use chrono::TimeZone;
 
-use crate::domain::ports::{AocClient, GetLeaderboard, InputCache};
+use crate::domain::ports::{AocClient, GetLeaderboard, InputCache, InputCacheError};
 use crate::domain::{DurationString, Submission, SubmissionStatus};
 use crate::infrastructure::aoc_api::aoc_client_impl::ResponseStatus;
 use crate::infrastructure::aoc_api::AocApi;
@@ -23,17 +24,17 @@ impl Driver {
     pub fn input(&self, year: u16, day: u8) -> Result<String, anyhow::Error> {
         let is_already_released = self.is_input_released_yet(year, day, &chrono::Utc::now())?;
         if !is_already_released {
-            return anyhow::bail!("The input is not released yet");
+            anyhow::bail!("The input is not released yet");
         }
 
         match FileInputCache::load(year, day) {
             Ok(input) => return Ok(input),
             Err(e) => match e {
-                Error(ErrorKind::NoCacheFound(message), _) => {
-                    eprintln!("{}. Attempting to download it from the server...", message);
+                InputCacheError::Empty(_) => {
+                    eprintln!("Attempting to download it from the server...");
                 }
-                Error(ErrorKind::CacheFailure(_), _) => {
-                    bail!("Cache corrupted. Clear the cache and try again.");
+                InputCacheError::Load(_) => {
+                    eprintln!("Cache corrupted. Clear the cache and try again.");
                 }
                 _ => {
                     eprintln!("Failed to load the input from the cache: {}", e);
@@ -49,7 +50,7 @@ impl Driver {
                 eprintln!("Failed saving the input to the cache");
             }
         } else {
-            bail!("{}", input.body);
+            anyhow::bail!("{}", input.body);
         }
         Ok(input.body)
     }
@@ -60,7 +61,7 @@ impl Driver {
         day: u8,
         part: crate::domain::RiddlePart,
         answer: String,
-    ) -> Result<()> {
+    ) -> Result<(), anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
 
@@ -103,7 +104,7 @@ impl Driver {
 
         let submission_result = aoc_api
             .submit_answer(submission)
-            .chain_err(|| "Failed to submit the answer")?;
+            .context("Submitting the result was unsuccessful")?;
         eprintln!("Your submission result...\n\n");
         println!("{}", submission_result.message);
         if submission_result.status == SubmissionStatus::Correct
@@ -112,25 +113,25 @@ impl Driver {
         {
             if let Some(ref mut cache) = cache {
                 cache.add(submission_result);
-                return cache.save_to_cache();
+                return Ok(cache.save_to_cache()?);
             } else {
                 let mut cache = SubmissionHistory::new(year, day);
                 cache.add(submission_result);
-                return cache.save_to_cache();
+                return Ok(cache.save_to_cache()?);
             }
         }
 
         Ok(())
     }
 
-    pub fn clear_cache(&self) -> Result<()> {
-        FileInputCache::clear().chain_err(|| "Failed to clear the input cache")?;
-        SubmissionHistory::clear().chain_err(|| "Failed to clear the submission history cache")?;
+    pub fn clear_cache(&self) -> Result<(), anyhow::Error> {
+        FileInputCache::clear()?;
+        SubmissionHistory::clear()?;
         Ok(())
     }
 
     /// Returns the description of the riddles
-    pub fn get_description(&self, year: u16, day: u8) -> Result<String> {
+    pub fn get_description(&self, year: u16, day: u8) -> Result<String, anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
@@ -143,13 +144,13 @@ impl Driver {
         year: u16,
         day: u8,
         now: &chrono::DateTime<chrono::Utc>,
-    ) -> Result<bool> {
+    ) -> Result<bool, anyhow::Error> {
         let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)
             .unwrap()
             .with_ymd_and_hms(year as i32, 12, day as u32, 0, 0, 0)
             .single()
         {
-            None => bail!("Invalid date"),
+            None => anyhow::bail!("Invalid date"),
             Some(time) => time,
         };
 
@@ -162,7 +163,7 @@ impl Driver {
     /// let driver = Driver::default();
     /// driver.list_app_directories();
     /// ```
-    pub fn list_app_directories(&self) -> Result<HashMap<&str, String>> {
+    pub fn list_app_directories(&self) -> Result<HashMap<&str, String>, anyhow::Error> {
         let mut directories = HashMap::new();
         if let Some(config_dir) = Configuration::get_project_directories()
             .config_dir()
@@ -179,7 +180,7 @@ impl Driver {
         Ok(directories)
     }
 
-    pub fn get_leaderboard(&self, year: u16) -> Result<String> {
+    pub fn get_leaderboard(&self, year: u16) -> Result<String, anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
         let leaderboard = aoc_client.get_leaderboard(year)?;
@@ -222,10 +223,6 @@ mod tests {
         let input = driver.input(0, 0);
         assert!(input.is_err());
         let error = input.err().unwrap();
-        assert!(
-            error.description() == "Failed to check if the input is released yet",
-            "Error message should be 'Failed to check if the input is released yet', was: {}",
-            error.description()
-        );
+        assert!(error.to_string() == "Invalid date");
     }
 }

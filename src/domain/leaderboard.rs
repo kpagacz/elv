@@ -38,10 +38,10 @@ impl TryFrom<&str> for LeaderboardEntry {
             position: entry_position
                 .replace(r")", "")
                 .parse()
-                .or(LeaderboardEntryError::Parsing("position".to_owned()))?,
+                .map_err(|_| LeaderboardEntryError::Parsing("position".to_owned()))?,
             points: entry_points
                 .parse()
-                .or(LeaderboardEntryError::Parsing("points".to_owned()))?,
+                .map_err(|_| LeaderboardEntryError::Parsing("points".to_owned()))?,
             username: entry_username,
         })
     }
@@ -68,7 +68,7 @@ impl TryFrom<Vec<String>> for Leaderboard {
     type Error = LeaderboardError;
 
     fn try_from(value: Vec<String>) -> Result<Self, LeaderboardError> {
-        let entries: Result<Vec<LeaderboardEntry>> = value
+        let entries: Result<Vec<LeaderboardEntry>, LeaderboardEntryError> = value
             .iter()
             .map(|entry| LeaderboardEntry::try_from(entry.as_ref()))
             .collect();
@@ -93,7 +93,7 @@ mod tests {
         let result_entry = LeaderboardEntry::try_from(entry);
         match result_entry {
             Ok(result) => assert_eq!(expected_entry, result),
-            Err(e) => panic!("error parsing the entry: {}", e.description()),
+            Err(e) => panic!("error parsing the entry: {}", e),
         }
     }
 
@@ -111,7 +111,7 @@ mod tests {
         let result_entry = LeaderboardEntry::try_from(entry);
         match result_entry {
             Ok(result) => assert_eq!(expected_entry, result),
-            Err(e) => panic!("error parsing the entry: {}", e.description()),
+            Err(e) => panic!("error parsing the entry: {}", e),
         }
     }
 
@@ -137,7 +137,7 @@ mod tests {
         };
         match Leaderboard::try_from(entries) {
             Ok(result) => assert_eq!(expected_leaderboard, result),
-            Err(e) => panic!("Test case failed {}", e.description()),
+            Err(e) => panic!("Test case failed {}", e),
         }
     }
 }
