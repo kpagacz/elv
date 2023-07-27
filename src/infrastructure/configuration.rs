@@ -1,5 +1,3 @@
-use crate::domain::errors::*;
-
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct AocConfiguration {
     #[serde(default = "default_token")]
@@ -79,7 +77,7 @@ impl Configuration {
             .expect("Failed to get the project directories")
     }
 
-    fn write_default_config() -> Result<()> {
+    fn write_default_config() -> Result<(), anyhow::Error> {
         let default_config = Configuration::default();
         let project_dirs = Self::get_project_directories();
         let config_path = project_dirs.config_dir().join(".config");

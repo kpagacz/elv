@@ -1,13 +1,16 @@
 use std::io::Read;
 
-use crate::domain::{errors::*, ports::GetLeaderboard, Leaderboard};
+use crate::domain::{
+    ports::{AocClientError, GetLeaderboard},
+    Leaderboard, LeaderboardError,
+};
 
 use super::{AocApi, AOC_URL};
 
 impl AocApi {
-    fn parse_leaderboard_response(response_body: String) -> Result<Leaderboard> {
-        let leaderboard_entries_selector = scraper::Selector::parse(".leaderboard-entry")
-            .map_err(|_err| "Error when parsing the leaderboard css selector")?;
+    fn parse_leaderboard_response(response_body: String) -> Result<Leaderboard, LeaderboardError> {
+        let leaderboard_entries_selector =
+            scraper::Selector::parse(".leaderboard-entry").expect("Error parsing the css selector");
         let html = scraper::Html::parse_document(&response_body);
         let leaderboard_position_selector =
             scraper::Selector::parse(".leaderboard-position").unwrap();
@@ -63,13 +66,13 @@ impl AocApi {
 }
 
 impl GetLeaderboard for AocApi {
-    fn get_leaderboard(&self, year: u16) -> Result<Leaderboard> {
+    fn get_leaderboard(&self, year: u16) -> Result<Leaderboard, AocClientError> {
         let url = reqwest::Url::parse(&format!("{}/{}/leaderboard", AOC_URL, year))?;
         let mut response = self.http_client.get(url).send()?.error_for_status()?;
         let mut body = String::from("");
         response.read_to_string(&mut body)?;
 
-        Self::parse_leaderboard_response(body)
+        Ok(Self::parse_leaderboard_response(body)?)
     }
 }
 

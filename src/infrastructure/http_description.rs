@@ -1,7 +1,4 @@
-use crate::{
-    domain::{errors::*, Description},
-    Configuration,
-};
+use crate::{domain::Description, Configuration};
 
 use super::CliDisplay;
 
@@ -48,11 +45,13 @@ impl HttpDescription {
 }
 
 impl TryFrom<reqwest::blocking::Response> for HttpDescription {
-    type Error = Error;
+    type Error = anyhow::Error;
 
-    fn try_from(http_response: reqwest::blocking::Response) -> Result<HttpDescription> {
+    fn try_from(
+        http_response: reqwest::blocking::Response,
+    ) -> Result<HttpDescription, anyhow::Error> {
         if http_response.status().is_success() == false {
-            return Err("AoC server responded with an error".into());
+            anyhow::bail!("AoC server responded with an error".to_owned());
         }
 
         let mut year = String::new();
@@ -64,17 +63,15 @@ impl TryFrom<reqwest::blocking::Response> for HttpDescription {
                 captures.expand("1", &mut year);
                 captures.expand("2", &mut day);
             }
-            None => error_chain::bail!(
-                "Cannot extract year and day from the url to construct a Description"
-            ),
+            None => {
+                anyhow::bail!("Cannot extract year and day from the url to construct a Description")
+            }
         }
 
         Ok(HttpDescription {
-            year: year.parse().chain_err(|| "Failed parsing the year")?,
-            day: day.parse().chain_err(|| "Failed parsing the day")?,
-            body: http_response
-                .text()
-                .chain_err(|| "Failed unwrapping the body of the response")?,
+            year: year.parse()?,
+            day: day.parse()?,
+            body: http_response.text()?,
         })
     }
 }

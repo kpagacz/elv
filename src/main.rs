@@ -86,7 +86,7 @@ fn main() {
                     }
                 }
             }
-            Err(e) => eprintln!("❗️ Error when getting the input:\n\t{}", e.description()),
+            Err(e) => eprintln!("❗️ Error when getting the input:\n\t{}", e.to_string()),
         }
     }
 
@@ -94,7 +94,7 @@ fn main() {
         let driver = Driver::new(get_configuration(configuration_builder));
         match driver.clear_cache() {
             Ok(_) => eprintln!("✅ Cache cleared"),
-            Err(e) => panic!("❌ error when clearing cache: {}", e.description()),
+            Err(e) => panic!("❌ error when clearing cache: {}", e.to_string()),
         }
     }
 
@@ -112,7 +112,7 @@ fn main() {
         let driver = Driver::new(get_configuration(configuration_builder));
         match driver.get_description(year, day) {
             Ok(description) => println!("{}", description),
-            Err(e) => eprintln!("Error when getting the description: {}", e.description()),
+            Err(e) => eprintln!("Error when getting the description: {}", e.to_string()),
         }
     }
 
@@ -124,7 +124,7 @@ fn main() {
                     println!("{}: {}", name, path);
                 }
             }
-            Err(e) => eprintln!("Error when listing the directories: {}", e.description()),
+            Err(e) => eprintln!("Error when listing the directories: {}", e.to_string()),
         }
     }
 
@@ -144,7 +144,7 @@ fn main() {
         let driver = Driver::new(get_configuration(configuration_builder));
         match driver.get_leaderboard(year) {
             Ok(text) => println!("{text}"),
-            Err(e) => eprintln!("Error when getting the leaderboards: {}", e.description()),
+            Err(e) => eprintln!("Error when getting the leaderboards: {}", e.to_string()),
         }
     }
 }
