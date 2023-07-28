@@ -1,5 +1,34 @@
 use std::path::PathBuf;
 
+use clap::Args;
+
+#[derive(Debug, Args)]
+pub struct RiddleArgs {
+    /// The year of the challenge
+    ///
+    /// If you do not supply a year, the current year will be used.
+    #[arg(short, long, requires("day"), value_parser = clap::value_parser!(u16))]
+    pub year: Option<u16>,
+
+    /// The day of the challenge
+    ///
+    /// If you do not supply a day, the current day of the month will be used
+    /// (if the current month is December).
+    #[arg(short, long, requires("year"), value_parser = clap::value_parser!(u8))]
+    pub day: Option<u8>,
+}
+
+#[derive(Debug, Args)]
+pub struct TokenArgs {
+    /// Your Advent of Code session token
+    ///
+    /// You can find your session token by logging into Advent of Code and
+    /// inspecting the cookies of the page. The session token is the value of
+    /// the cookie named "session".
+    #[arg(short, long)]
+    pub token: Option<String>,
+}
+
 #[derive(Debug, clap::Subcommand)]
 pub enum CliCommand {
     /// 📄 Get the description of the challenge
@@ -8,13 +37,18 @@ pub enum CliCommand {
     /// the console.
     #[command(visible_aliases = ["desc", "d"])]
     Description {
+        #[command(flatten)]
+        riddle_args: RiddleArgs,
+
+        #[command(flatten)]
+        token: TokenArgs,
+
         /// The column width of the output in characters
         ///
         /// Some terminals have limited horizontal space, so this option
         /// can be used to limit the width of the output.
-        /// (default: 120)
-        #[arg(short, long)]
-        width: Option<usize>,
+        #[arg(short, long, default_value_t = 120)]
+        width: usize,
     },
 
     /// 📨 Get the input for the challenge
@@ -26,6 +60,12 @@ pub enum CliCommand {
     /// The input will be cached in the application's cache directory.
     #[command(visible_aliases = ["i"])]
     Input {
+        #[command(flatten)]
+        riddle_args: RiddleArgs,
+
+        #[command(flatten)]
+        token_args: TokenArgs,
+
         /// The input will be written to the file with this name
         #[arg(short, long, default_value = "input", conflicts_with = "no_file")]
         out: PathBuf,
@@ -57,13 +97,29 @@ pub enum CliCommand {
         ///
         /// Your answer to the challenge. This argument is required.
         answer: String,
+
+        #[command(flatten)]
+        riddle_args: RiddleArgs,
+
+        #[command(flatten)]
+        token_args: TokenArgs,
     },
 
     /// Show the leaderboard
     ///
     /// This command downloads the leaderboard rankings for a particular year.
     #[command(visible_aliases = ["l"])]
-    Leaderboard,
+    Leaderboard {
+        #[command(flatten)]
+        token_args: TokenArgs,
+
+        /// The year of the challenge
+        ///
+        /// If you do not supply a year, this command will pull the leaderboards from
+        /// the latest event.
+        #[arg(short, long, value_parser = clap::value_parser!(u16))]
+        year: Option<u16>,
+    },
 
     /// 🗑️  Clears the cache
     ///

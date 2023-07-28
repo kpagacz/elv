@@ -1,63 +1,66 @@
-use std::{io::Write, path::PathBuf};
-
+use anyhow::Context;
 use chrono::Datelike;
 use clap::Parser;
-use config::{builder::DefaultState, ConfigBuilder};
-use elv::{CliCommand, CliInterface, Configuration, Driver};
+
+use elv::{
+    application::cli::{RiddleArgs, TokenArgs},
+    domain::RiddlePart,
+    CliCommand, CliInterface, Configuration, Driver,
+};
+use std::{io::Write, path::PathBuf};
 
 fn main() {
     let cli = CliInterface::parse();
 
-    let mut builder = Configuration::builder();
-
-    if let Some(token) = cli.token {
-        builder = builder
-            .set_override("aoc.token", token)
-            .expect("Failed to set the Advent Of Code token");
-    }
-
-    let mut day = cli.day;
-    let mut year = cli.year;
-    if day.is_none() || year.is_none() {
-        let now = chrono::Utc::now() - chrono::Duration::hours(4);
-        if day.is_none() {
-            day = Some(now.day() as u8);
-        }
-        if year.is_none() {
-            year = Some(now.year() as u16);
-        }
-    }
-
     match cli.command {
         CliCommand::Input {
+            riddle_args,
+            token_args,
             out,
             no_file,
             print,
-        } => handle_input_command(builder, year.unwrap(), day.unwrap(), out, no_file, print),
-        CliCommand::Submit { part, answer } => {
-            let driver = Driver::new(get_configuration(builder));
-            match driver.submit_answer(year.unwrap(), day.unwrap(), part, answer) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
+        } => handle_input_command(riddle_args, token_args, out, no_file, print),
+        CliCommand::Submit {
+            riddle_args,
+            token_args,
+            part,
+            answer,
+        } => {
+            handle_submit_command(riddle_args, token_args, part, answer);
         }
-        CliCommand::ClearCache => handle_clear_cache_command(builder),
-        CliCommand::Description { width } => {
-            handle_description_command(builder, year.unwrap(), day.unwrap(), width)
+        CliCommand::Description {
+            token,
+            riddle_args,
+            width,
+        } => handle_description_command(token, riddle_args, width),
+        CliCommand::Leaderboard { token_args, year } => handle_get_leaderboard(token_args, year),
+        CliCommand::ClearCache => handle_clear_cache_command(),
+        CliCommand::ListDirs => handle_list_dirs_command(),
+    }
+
+    fn handle_submit_command(
+        riddle_args: RiddleArgs,
+        token_args: TokenArgs,
+        part: RiddlePart,
+        answer: String,
+    ) {
+        let driver = get_driver(Some(token_args), None);
+        let (year, day) = determine_date(riddle_args);
+        match driver.submit_answer(year, day, part, answer) {
+            Ok(_) => {}
+            Err(e) => eprint!("Failed to submit the answer. {}", e.to_string()),
         }
-        CliCommand::ListDirs => handle_list_dirs_command(builder),
-        CliCommand::Leaderboard => handle_get_leaderboard(builder, year.unwrap()),
     }
 
     fn handle_input_command(
-        configuration_builder: ConfigBuilder<DefaultState>,
-        year: u16,
-        day: u8,
+        riddle_args: RiddleArgs,
+        token_args: TokenArgs,
         out: PathBuf,
         no_file: bool,
         print: bool,
     ) {
-        let driver = Driver::new(get_configuration(configuration_builder));
+        let driver = get_driver(Some(token_args), None);
+        let (year, day) = determine_date(riddle_args);
         match driver.input(year, day) {
             Ok(input) => {
                 if print {
@@ -90,34 +93,24 @@ fn main() {
         }
     }
 
-    fn handle_clear_cache_command(configuration_builder: ConfigBuilder<DefaultState>) {
-        let driver = Driver::new(get_configuration(configuration_builder));
+    fn handle_description_command(token_args: TokenArgs, riddle_args: RiddleArgs, width: usize) {
+        let driver = get_driver(Some(token_args), Some(width));
+        let (year, day) = determine_date(riddle_args);
+        match driver.get_description(year, day) {
+            Ok(description) => println!("{}", description),
+            Err(e) => eprintln!("Error when getting the description: {}", e.to_string()),
+        }
+    }
+    fn handle_clear_cache_command() {
+        let driver = get_driver(None, None);
         match driver.clear_cache() {
             Ok(_) => eprintln!("✅ Cache cleared"),
             Err(e) => panic!("❌ error when clearing cache: {}", e.to_string()),
         }
     }
 
-    fn handle_description_command(
-        mut configuration_builder: ConfigBuilder<DefaultState>,
-        year: u16,
-        day: u8,
-        width: Option<usize>,
-    ) {
-        if let Some(width) = width {
-            configuration_builder = configuration_builder
-                .set_override("cli.output_width", width as u64)
-                .expect("Failed to set the output width");
-        }
-        let driver = Driver::new(get_configuration(configuration_builder));
-        match driver.get_description(year, day) {
-            Ok(description) => println!("{}", description),
-            Err(e) => eprintln!("Error when getting the description: {}", e.to_string()),
-        }
-    }
-
-    fn handle_list_dirs_command(configuration_builder: ConfigBuilder<DefaultState>) {
-        let driver = Driver::new(get_configuration(configuration_builder));
+    fn handle_list_dirs_command() {
+        let driver = get_driver(None, None);
         match driver.list_app_directories() {
             Ok(dirs) => {
                 for (name, path) in dirs {
@@ -128,23 +121,52 @@ fn main() {
         }
     }
 
-    fn get_configuration(builder: ConfigBuilder<DefaultState>) -> Configuration {
-        let configuration = builder
-            .build()
-            .unwrap()
-            .try_deserialize()
-            .unwrap_or_else(|_| {
-                eprintln!("Failed to deserialize the configuration, using default...");
-                Configuration::new()
-            });
-        configuration
-    }
-
-    fn handle_get_leaderboard(configuration_builder: ConfigBuilder<DefaultState>, year: u16) {
-        let driver = Driver::new(get_configuration(configuration_builder));
-        match driver.get_leaderboard(year) {
+    fn handle_get_leaderboard(token_args: TokenArgs, year: Option<u16>) {
+        let driver = get_driver(Some(token_args), None);
+        match driver.get_leaderboard(year.unwrap_or_else(|| chrono::Utc::now().year() as u16)) {
             Ok(text) => println!("{text}"),
             Err(e) => eprintln!("Error when getting the leaderboards: {}", e.to_string()),
         }
+    }
+
+    fn determine_date(riddle_args: RiddleArgs) -> (u16, u8) {
+        let est_now = chrono::Utc::now() - chrono::Duration::hours(4);
+        match (riddle_args.year, riddle_args.day) {
+            (Some(year), Some(day)) => (year, day),
+            (None, Some(day)) => (est_now.year() as u16, day),
+            (Some(year), None) => (year, est_now.day() as u8),
+            (None, None) => (est_now.year() as u16, est_now.day() as u8),
+        }
+    }
+
+    fn build_configuration(
+        token_args: Option<TokenArgs>,
+        terminal_width: Option<usize>,
+    ) -> Result<Configuration, anyhow::Error> {
+        let mut config_builder = Configuration::builder();
+
+        if let Some(token) = token_args.and_then(|args| args.token) {
+            config_builder = config_builder
+                .set_override("aoc.token", token)
+                .context("Failed to set the override on the AOC token")?;
+        }
+
+        if let Some(width) = terminal_width {
+            config_builder = config_builder
+                .set_override("cli.output_width", width as u64)
+                .expect("Failed to set the output width");
+        }
+
+        config_builder
+            .build()?
+            .try_deserialize::<Configuration>()
+            .or(Ok(Configuration::new()))
+    }
+
+    fn get_driver(token_args: Option<TokenArgs>, terminal_width: Option<usize>) -> Driver {
+        Driver::new(
+            build_configuration(token_args, terminal_width)
+                .expect("Failed to build the configuration for the applciation"),
+        )
     }
 }
