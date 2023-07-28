@@ -1,5 +1,5 @@
-mod application;
-mod domain;
+pub mod application;
+pub mod domain;
 mod driver;
 mod infrastructure;
 mod submission_history;
