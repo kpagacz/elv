@@ -27,7 +27,7 @@ config = "0.13.2"
 serde = "1.0.130"
 toml = "0.5.9"
 serde_cbor = "0.11.2"
-chrono = { version = "0.4.23", features = ["serde"] }
+chrono = { version = "0.4.26", features = ["serde"] }
 clap = { version = "4.0.29", features = ["derive", "unicode"] }
 html2text = "0.4.5"
 regex = "1.7.1"

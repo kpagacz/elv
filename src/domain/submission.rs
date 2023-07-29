@@ -4,12 +4,12 @@ use super::RiddlePart;
 pub struct Submission {
     pub part: RiddlePart,
     pub answer: String,
-    pub year: u16,
-    pub day: u8,
+    pub year: i32,
+    pub day: i32,
 }
 
 impl Submission {
-    pub fn new(part: RiddlePart, answer: String, year: u16, day: u8) -> Self {
+    pub fn new(part: RiddlePart, answer: String, year: i32, day: i32) -> Self {
         Submission {
             part,
             answer,

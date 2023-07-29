@@ -21,7 +21,7 @@ impl Driver {
         Self { configuration }
     }
 
-    pub fn input(&self, year: u16, day: u8) -> Result<String, anyhow::Error> {
+    pub fn input(&self, year: i32, day: i32) -> Result<String, anyhow::Error> {
         let is_already_released = self.is_input_released_yet(year, day, &chrono::Utc::now())?;
         if !is_already_released {
             anyhow::bail!("The input is not released yet");
@@ -57,8 +57,8 @@ impl Driver {
 
     pub fn submit_answer(
         &self,
-        year: u16,
-        day: u8,
+        year: i32,
+        day: i32,
         part: crate::domain::RiddlePart,
         answer: String,
     ) -> Result<(), anyhow::Error> {
@@ -131,7 +131,7 @@ impl Driver {
     }
 
     /// Returns the description of the riddles
-    pub fn get_description(&self, year: u16, day: u8) -> Result<String, anyhow::Error> {
+    pub fn get_description(&self, year: i32, day: i32) -> Result<String, anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
@@ -141,8 +141,8 @@ impl Driver {
 
     fn is_input_released_yet(
         &self,
-        year: u16,
-        day: u8,
+        year: i32,
+        day: i32,
         now: &chrono::DateTime<chrono::Utc>,
     ) -> Result<bool, anyhow::Error> {
         let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)

@@ -18,12 +18,12 @@ pub enum SubmissionHistoryError {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct SubmissionHistory {
     submissions: Vec<SubmissionResult>,
-    year: u16,
-    day: u8,
+    year: i32,
+    day: i32,
 }
 
 impl SubmissionHistory {
-    pub fn new(year: u16, day: u8) -> Self {
+    pub fn new(year: i32, day: i32) -> Self {
         SubmissionHistory {
             submissions: Vec::new(),
             year,
@@ -37,7 +37,7 @@ impl SubmissionHistory {
             .find(|s| s.submission.part == *part && s.status == SubmissionStatus::Correct)
     }
 
-    pub fn from_cache(year: &u16, day: &u8) -> Result<Self, SubmissionHistoryError> {
+    pub fn from_cache(year: &i32, day: &i32) -> Result<Self, SubmissionHistoryError> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
             Self::new(*year, *day).save_to_cache()?;
@@ -127,7 +127,7 @@ impl SubmissionHistory {
         Ok(())
     }
 
-    fn cache_path(year: &u16, day: &u8) -> std::path::PathBuf {
+    fn cache_path(year: &i32, day: &i32) -> std::path::PathBuf {
         Configuration::get_project_directories()
             .cache_dir()
             .join("submissions")

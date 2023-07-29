@@ -4,7 +4,7 @@ use clap::Parser;
 
 use elv::{
     application::cli::{RiddleArgs, TokenArgs},
-    domain::RiddlePart,
+    domain::{RiddleDate, RiddlePart},
     CliCommand, CliInterface, Configuration, Driver,
 };
 use std::{io::Write, path::PathBuf};
@@ -45,7 +45,13 @@ fn main() {
         answer: String,
     ) {
         let driver = get_driver(Some(token_args), None);
-        let (year, day) = determine_date(riddle_args);
+        let (year, day) = match determine_date(riddle_args) {
+            Ok(res) => res,
+            Err(e) => {
+                eprintln!("Could not determine the date {}", e.to_string());
+                return;
+            }
+        };
         match driver.submit_answer(year, day, part, answer) {
             Ok(_) => {}
             Err(e) => eprint!("Failed to submit the answer. {}", e.to_string()),
@@ -60,7 +66,13 @@ fn main() {
         print: bool,
     ) {
         let driver = get_driver(Some(token_args), None);
-        let (year, day) = determine_date(riddle_args);
+        let (year, day) = match determine_date(riddle_args) {
+            Ok(res) => res,
+            Err(e) => {
+                eprintln!("Could not determine the date {}", e.to_string());
+                return;
+            }
+        };
         match driver.input(year, day) {
             Ok(input) => {
                 if print {
@@ -95,7 +107,13 @@ fn main() {
 
     fn handle_description_command(token_args: TokenArgs, riddle_args: RiddleArgs, width: usize) {
         let driver = get_driver(Some(token_args), Some(width));
-        let (year, day) = determine_date(riddle_args);
+        let (year, day) = match determine_date(riddle_args) {
+            Ok(res) => res,
+            Err(e) => {
+                eprintln!("Could not determine the riddle date {}", e.to_string());
+                return;
+            }
+        };
         match driver.get_description(year, day) {
             Ok(description) => println!("{}", description),
             Err(e) => eprintln!("Error when getting the description: {}", e.to_string()),
@@ -129,14 +147,10 @@ fn main() {
         }
     }
 
-    fn determine_date(riddle_args: RiddleArgs) -> (u16, u8) {
+    fn determine_date(riddle_args: RiddleArgs) -> Result<(i32, i32), anyhow::Error> {
         let est_now = chrono::Utc::now() - chrono::Duration::hours(4);
-        match (riddle_args.year, riddle_args.day) {
-            (Some(year), Some(day)) => (year, day),
-            (None, Some(day)) => (est_now.year() as u16, day),
-            (Some(year), None) => (year, est_now.day() as u8),
-            (None, None) => (est_now.year() as u16, est_now.day() as u8),
-        }
+        let best_guess_date = RiddleDate::best_guess(riddle_args.year, riddle_args.day, est_now)?;
+        Ok((best_guess_date.year, best_guess_date.day))
     }
 
     fn build_configuration(

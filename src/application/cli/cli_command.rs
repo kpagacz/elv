@@ -6,16 +6,19 @@ use clap::Args;
 pub struct RiddleArgs {
     /// The year of the challenge
     ///
-    /// If you do not supply a year, the current year will be used.
-    #[arg(short, long, requires("day"), value_parser = clap::value_parser!(u16))]
-    pub year: Option<u16>,
+    /// If you do not supply a year and a day, the current year will be used.
+    /// If you do not supply a year, but supply a day, the previous year
+    /// will be used.
+    #[arg(short, long, value_parser = clap::value_parser!(i32))]
+    pub year: Option<i32>,
 
     /// The day of the challenge
     ///
     /// If you do not supply a day, the current day of the month will be used
-    /// (if the current month is December).
-    #[arg(short, long, requires("year"), value_parser = clap::value_parser!(u8))]
-    pub day: Option<u8>,
+    /// (if the current month is December). If the current month is not December
+    /// and you do not supply the year, the previous year will be used.
+    #[arg(short, long, value_parser = clap::value_parser!(i32))]
+    pub day: Option<i32>,
 }
 
 #[derive(Debug, Args)]

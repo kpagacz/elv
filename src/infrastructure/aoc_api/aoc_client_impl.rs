@@ -5,7 +5,7 @@ use reqwest::header::{CONTENT_TYPE, ORIGIN};
 use std::io::Read;
 
 impl AocClient for AocApi {
-    fn get_input(&self, year: &u16, day: &u8) -> InputResponse {
+    fn get_input(&self, year: &i32, day: &i32) -> InputResponse {
         let url = match reqwest::Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
             Ok(url) => url,
             Err(_) => {
@@ -113,8 +113,8 @@ impl AocClient for AocApi {
     /// for a given day and year and returns it as a formatted string.
     fn get_description<HttpDescription: std::convert::TryFrom<reqwest::blocking::Response>>(
         &self,
-        year: &u16,
-        day: &u8,
+        year: &i32,
+        day: &i32,
     ) -> Result<HttpDescription, AocClientError> {
         let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))?;
         self.http_client
