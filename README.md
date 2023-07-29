@@ -26,6 +26,8 @@ instead of the webpage. So far `elv` supports:
 - downloading riddles' description
 - downloading a riddle's input for a given year and day
 - submitting answers to a riddle
+- getting the official leaderboards for a given year
+- guessing the year and day of a riddle based on the current date
 - caching `AoC` responses whenever possible, so you minimize your
   footprint on `AoC`'s servers
 
@@ -182,7 +184,7 @@ year. While the event is not held, you need to specify the year and day
 of the challenge explicitly using `-y' and`-d' parameters.
 
 ```console
-elv -t <YOUR SESSION TOKEN> desc
+elv desc -t <YOUR_TOKEN>
 ```
 
 #### Getting a description of a particular riddle
@@ -190,7 +192,7 @@ elv -t <YOUR SESSION TOKEN> desc
 You specify the day and the year of the riddle.
 
 ```console
-elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 desc
+elv desc -t <YOUR SESSION TOKEN> -y 2021 -d 1
 # Prints the description of the riddle published on the 1st of December 2021
 ```
 
@@ -203,7 +205,7 @@ year. While the event is not held, you need to specify the year and day
 of the challenge explicitly using `-y' and`-d' parameters.
 
 ```console
-elv -t <YOUR SESSION TOKEN> input
+elv input -t <YOUR SESSION TOKEN>
 ```
 
 #### Getting input for a particular riddle
@@ -211,7 +213,7 @@ elv -t <YOUR SESSION TOKEN> input
 You specify the day and the year of the riddle.
 
 ```console
-elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 input
+elv input -t <YOUR SESSION TOKEN> -y 2021 -d 1
 # downloads the input for the riddle published on the 1st of December 2021
 ```
 
@@ -224,8 +226,8 @@ year. While the event is not held, you need to specify the year and day
 of the challenge explicitly using `-y' and`-d' parameters.
 
 ```console
-elv -t <YOUR SESSION TOKEN> submit one <SOLUTION>
-elv -t <YOUR SESSION TOKEN> submit two <SOLUTION>
+elv submit -t <YOUR SESSION TOKEN> one <SOLUTION>
+elv submit -t <YOUR SESSION TOKEN> two <SOLUTION>
 ```
 
 #### Submitting the solution for a particular riddle
@@ -233,7 +235,7 @@ elv -t <YOUR SESSION TOKEN> submit two <SOLUTION>
 You specify the day and the year of the riddle.
 
 ```console
-elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 submit one <SOLUTION>
+elv submit -t <YOUR SESSION TOKEN> -y 2021 -d 1 one <SOLUTION>
 ```
 
 ### Getting the leaderboard
@@ -245,7 +247,7 @@ year. While the event is not held, you need to specify the year
 explicitly using `-y' parameter.
 
 ```console
-elv -t <YOUR SESSION TOKEN> leaderboard
+elv leaderboard -t <YOUR SESSION TOKEN>
 ```
 
 #### Getting the leaderboard for a particular year
@@ -253,9 +255,56 @@ elv -t <YOUR SESSION TOKEN> leaderboard
 You specify the year of the leaderboard.
 
 ```console
-elv -t <YOUR SESSION TOKEN> -y 2021 -d 1 leaderboard
+elv leaderboard -y 2021
 ```
 
+### Guessing the year and the day of the riddle
+
+`elv` can guess the year and day of the riddle you are working on. It
+does so by looking at the current date and arguments `year` and `day`
+passed to `elv`. The application supports the following scenarios:
+
+* if you do not pass the `year` and `day` arguments:
+  * if it is December and the event is held, `elv` will guess you are
+    working on the current day's riddle:
+    ```console
+    # Date is December, 6th
+    elv desc
+    # will download the description of the riddle published on the 6th of December
+    ```
+  * if it is not December, `elv` will not be able to guess the date and
+    will ask you to provide the `year` and `day` arguments
+    ```console
+    # Date is November, 24th
+    elv desc # will not produce any description
+    ```
+* if you pass only the `day` argument:
+  * if it is December and the event is held, `elv` will guess you are
+    working on the current year's riddle
+    ```console
+    # Date is December, 6th
+    elv desc -d 4
+    # will download the description of the riddle
+    # published on the 4th of December the same year
+    ```
+  * if it is not December, `elv` will guess you meant the last year's
+    event
+    ```console
+    # Date is November, 24th
+    elv desc -d 4
+    # will download the description of the riddle
+    # published on the 4th of December last year
+    ```
+* if you pass only the `year` argument, `elv` will not be able to guess the
+  date and will ask you to provide the `day` argument
+* if you pass the `year` and `day` arguments, `elv` will use them regardless
+  of the current date
+  ```console
+  elv desc -y 2021 -d 4
+  # will download the description of the riddle
+  # published on the 4th of December 2021
+  # regardless of the current date
+  ```
 ## FAQ
 
 ### How can I store the session token?
@@ -267,15 +316,15 @@ already.
 1.  Passed as an argument to `elv` with the `-t` parameter:
 
     ```console
-    elv -t <YOUR TOKEN HERE> input
+    elv input -t <YOUR TOKEN HERE>
     # or
-    elv --token <YOUR TOKEN HERE> input
+    elv input --token <YOUR TOKEN HERE>
     ```
 
     As a live example:
 
     ```console
-    elv -t 01234567890123456789abcdefghi input
+    elv input -t 01234567890123456789abcdefghi
     ```
 
 2.  As an environment variable. `elv` looks for an environmental
@@ -301,7 +350,7 @@ already.
     token = "<YOUR TOKEN HERE>"
     ```
 
-### How can I get the value of the session token?
+### How can I get the value of the session token to pass it to `elv?
 
 The session token is sent to your HTTP client (usually your browser) as
 a cookie when you log into the Advent of Code web page. The easiest way
