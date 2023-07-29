@@ -123,7 +123,7 @@ impl CliDisplay for HttpDescription {
         .join("\n");
         html2text::from_read_with_decorator(
             description.as_bytes(),
-            configuration.cli.output_width,
+            configuration.cli.output_width as usize,
             html2text::render::text_renderer::TrivialDecorator::new(),
         )
     }

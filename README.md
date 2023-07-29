@@ -5,12 +5,12 @@ test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch
 
 ## Table of Contents:
 
-1.  [Introduction](#introduction){#toc-introduction}
-2.  [Installation](#installation){#toc-installation}
-3.  [Uninstallation](#uninstallation){#toc-uninstallation}
-4.  [Examples](#examples){#toc-examples}
-5.  [FAQ](#faq){#toc-faq}
-6.  [Configuration](#configuration){#toc-configuration}
+1.  [Introduction](#introduction)
+2.  [Installation](#installation)
+3.  [Uninstallation](#uninstallation)
+4.  [Examples](#examples)
+5.  [FAQ](#faq)
+6.  [Configuration](#configuration)
 
 ## Introduction
 
@@ -58,18 +58,16 @@ brew install kpagacz/elv/elv
 ```
 
 `elv` is hosted on a private tap (if you are into `homebrew`'s
-terminology), which is essentially a [GitHub
-repository](https://github.com/kpagacz/homebrew-elv). By default,
-`homebrew` installs the latest version of the application available in
+terminology), which is essentially a [GitHub repository](https://github.com/kpagacz/homebrew-elv).
+By default, `homebrew` installs the latest version of the application available in
 the repository. To install one of the previous versions, you must check
 out a specific commit corresponding to that version.
 
 ### Downloading a binary
 
 `elv` publishes several executables for different operating systems and
-architectures. Head to the [releases
-subpage](https://github.com/kpagacz/elv/releases) to check out the
-latest released version of `elv`.
+architectures. Head to the [releases subpage](https://github.com/kpagacz/elv/releases)
+to check out the latest released version of `elv`.
 
 #### Choose the binary matching your operating system and architecture
 
@@ -163,7 +161,7 @@ You need an Advent of Code session token to interact with its API. `elv`
 does not support authentication to the API on its own, so you need to
 get your token beforehand.
 
-### Getting the session token - **IMPORTANT**
+### Getting and setting the session token - **IMPORTANT**
 
 You will need to [log into Advent of
 Code](https://adventofcode.com/2022/auth/login). AoC site sends the
@@ -171,6 +169,16 @@ session token back to you using cookies. So you need to inspect the
 cookies and get the one named `session` value. This is your session
 token you can use with `elv`. The session token is valid for about a
 month, so remember to get another once the old one expires.
+
+Once you get your session token, we recommend to set it in `elv`'s
+configuration. You can do it by running:
+
+```console
+elv config set aoc.token <your-session-token>
+```
+
+See the [section about storing the session key](#how-can-i-store-the-session-token)
+for other ways to store the session token.
 
 If you do not get the session token, you will not be able to interact
 with Advent of Code API using `elv`.
@@ -184,7 +192,7 @@ year. While the event is not held, you need to specify the year and day
 of the challenge explicitly using `-y' and`-d' parameters.
 
 ```console
-elv desc -t <YOUR_TOKEN>
+elv desc
 ```
 
 #### Getting a description of a particular riddle
@@ -192,7 +200,7 @@ elv desc -t <YOUR_TOKEN>
 You specify the day and the year of the riddle.
 
 ```console
-elv desc -t <YOUR SESSION TOKEN> -y 2021 -d 1
+elv desc -y 2021 -d 1
 # Prints the description of the riddle published on the 1st of December 2021
 ```
 
@@ -205,7 +213,7 @@ year. While the event is not held, you need to specify the year and day
 of the challenge explicitly using `-y' and`-d' parameters.
 
 ```console
-elv input -t <YOUR SESSION TOKEN>
+elv input
 ```
 
 #### Getting input for a particular riddle
@@ -213,7 +221,7 @@ elv input -t <YOUR SESSION TOKEN>
 You specify the day and the year of the riddle.
 
 ```console
-elv input -t <YOUR SESSION TOKEN> -y 2021 -d 1
+elv input -y 2021 -d 1
 # downloads the input for the riddle published on the 1st of December 2021
 ```
 
@@ -226,8 +234,8 @@ year. While the event is not held, you need to specify the year and day
 of the challenge explicitly using `-y' and`-d' parameters.
 
 ```console
-elv submit -t <YOUR SESSION TOKEN> one <SOLUTION>
-elv submit -t <YOUR SESSION TOKEN> two <SOLUTION>
+elv submit one <SOLUTION>
+elv submit two <SOLUTION>
 ```
 
 #### Submitting the solution for a particular riddle
@@ -235,7 +243,7 @@ elv submit -t <YOUR SESSION TOKEN> two <SOLUTION>
 You specify the day and the year of the riddle.
 
 ```console
-elv submit -t <YOUR SESSION TOKEN> -y 2021 -d 1 one <SOLUTION>
+elv submit -y 2021 -d 1 one <SOLUTION>
 ```
 
 ### Getting the leaderboard
@@ -247,7 +255,7 @@ year. While the event is not held, you need to specify the year
 explicitly using `-y' parameter.
 
 ```console
-elv leaderboard -t <YOUR SESSION TOKEN>
+elv leaderboard
 ```
 
 #### Getting the leaderboard for a particular year
@@ -313,6 +321,12 @@ passed to `elv`. The application supports the following scenarios:
 the below list and moving to the next one if it did not find the token
 already.
 
+1. Set it in the configuration using the CLI:
+
+    ```console
+    elv config set aoc.token 01234567890123456789abcdefghi
+    ```
+
 1.  Passed as an argument to `elv` with the `-t` parameter:
 
     ```console
@@ -327,7 +341,7 @@ already.
     elv input -t 01234567890123456789abcdefghi
     ```
 
-2.  As an environment variable. `elv` looks for an environmental
+1.  As an environment variable. `elv` looks for an environmental
     variable `AOC_TOKEN` while searching for your session token.
     Example:
 
@@ -340,7 +354,7 @@ already.
     parameter, `elv` will pick the value of `AOC_TOKEN` and use it as a
     token.
 
-3.  In a configuration file. `elv` creates a configuration file in your
+1.  In a configuration file. `elv` creates a configuration file in your
     home directory. You can find the configuration file in a directory
     listed by running `elv list-dirs` in your terminal. Your config file
     should look like this:
@@ -370,6 +384,25 @@ elv list-dirs
 
 The application suppports a number of parameters in the configuration file.
 You can find the configuration file by invoking:
+
+### See the current configuration
+
+```console
+elv config list
+# or
+elv config l
+```
+
+### Set a configuration parameter
+
+```console
+elv config set <PARAMETER> <VALUE>
+```
+
+For example, changing the width of the output to 100 characters:
+```console
+elv config set cli.output_width 100
+```
 
 ### Configuration file
 

@@ -3,7 +3,7 @@ use chrono::Datelike;
 use clap::Parser;
 
 use elv::{
-    application::cli::{RiddleArgs, TokenArgs},
+    application::cli::{ConfigSubcommand, RiddleArgs, TokenArgs},
     domain::{RiddleDate, RiddlePart},
     CliCommand, CliInterface, Configuration, Driver,
 };
@@ -36,6 +36,10 @@ fn main() {
         CliCommand::Leaderboard { token_args, year } => handle_get_leaderboard(token_args, year),
         CliCommand::ClearCache => handle_clear_cache_command(),
         CliCommand::ListDirs => handle_list_dirs_command(),
+        CliCommand::Config { cmd } => match cmd {
+            ConfigSubcommand::List {} => handle_get_config(),
+            ConfigSubcommand::Set { key, value } => handle_set_config(key, value),
+        },
     }
 
     fn handle_submit_command(
@@ -48,13 +52,13 @@ fn main() {
         let (year, day) = match determine_date(riddle_args) {
             Ok(res) => res,
             Err(e) => {
-                eprintln!("Could not determine the date {}", e.to_string());
+                eprintln!("❌ {}", e.to_string());
                 return;
             }
         };
         match driver.submit_answer(year, day, part, answer) {
             Ok(_) => {}
-            Err(e) => eprint!("Failed to submit the answer. {}", e.to_string()),
+            Err(e) => eprint!("❌ Failed to submit the answer. {}", e.to_string()),
         }
     }
 
@@ -69,7 +73,7 @@ fn main() {
         let (year, day) = match determine_date(riddle_args) {
             Ok(res) => res,
             Err(e) => {
-                eprintln!("Could not determine the date {}", e.to_string());
+                eprintln!("❌ {}", e.to_string());
                 return;
             }
         };
@@ -110,7 +114,7 @@ fn main() {
         let (year, day) = match determine_date(riddle_args) {
             Ok(res) => res,
             Err(e) => {
-                eprintln!("Could not determine the riddle date {}", e.to_string());
+                eprintln!("❌ {}", e.to_string());
                 return;
             }
         };
@@ -135,7 +139,7 @@ fn main() {
                     println!("{}: {}", name, path);
                 }
             }
-            Err(e) => eprintln!("Error when listing the directories: {}", e.to_string()),
+            Err(e) => eprintln!("❌ Error when listing the directories: {}", e.to_string()),
         }
     }
 
@@ -143,7 +147,23 @@ fn main() {
         let driver = get_driver(Some(token_args), None);
         match driver.get_leaderboard(year.unwrap_or_else(|| chrono::Utc::now().year() as u16)) {
             Ok(text) => println!("{text}"),
-            Err(e) => eprintln!("Error when getting the leaderboards: {}", e.to_string()),
+            Err(e) => eprintln!("❌ Error when getting the leaderboards: {}", e.to_string()),
+        }
+    }
+
+    fn handle_get_config() {
+        match Driver::get_config_map() {
+            Ok(map) => map
+                .iter()
+                .for_each(|(key, value)| println!("{} {}", key, value)),
+            Err(e) => eprintln!("❌ {}", e.to_string()),
+        }
+    }
+
+    fn handle_set_config(key: String, value: String) {
+        match Driver::set_config_key(key, value) {
+            Ok(_) => println!("✅ Key successfully updated"),
+            Err(e) => eprintln!("❌ Failure: {}", e.to_string()),
         }
     }
 
@@ -162,14 +182,15 @@ fn main() {
         if let Some(token) = token_args.and_then(|args| args.token) {
             config_builder = config_builder
                 .set_override("aoc.token", token)
-                .context("Failed to set the override on the AOC token")?;
+                .context("❌ Failed to set the override on the AOC token")?;
         }
 
-        if let Some(width) = terminal_width {
-            config_builder = config_builder
-                .set_override("cli.output_width", width as u64)
-                .expect("Failed to set the output width");
-        }
+        config_builder = config_builder
+            .set_override_option(
+                "cli.output_width",
+                terminal_width.and_then(|width| Some(width as u32)),
+            )
+            .expect("❌ Failed to set the cli output width");
 
         config_builder
             .build()?
@@ -180,7 +201,7 @@ fn main() {
     fn get_driver(token_args: Option<TokenArgs>, terminal_width: Option<usize>) -> Driver {
         Driver::new(
             build_configuration(token_args, terminal_width)
-                .expect("Failed to build the configuration for the applciation"),
+                .expect("❌ Failed to build the configuration for the applciation"),
         )
     }
 }

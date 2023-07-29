@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Args;
 
+use super::cli_config_subcommand::ConfigSubcommand;
+
 #[derive(Debug, Args)]
 pub struct RiddleArgs {
     /// The year of the challenge
@@ -108,7 +110,7 @@ pub enum CliCommand {
         token_args: TokenArgs,
     },
 
-    /// Show the leaderboard
+    /// 🥇 Show the leaderboard
     ///
     /// This command downloads the leaderboard rankings for a particular year.
     #[command(visible_aliases = ["l"])]
@@ -136,4 +138,12 @@ pub enum CliCommand {
     /// Lists the directories used by the application. This command will print
     /// the directories used for the cache and the configuration file.
     ListDirs,
+
+    /// 🔍 Show and edit the configuration
+    ///
+    /// Governs the configuration of the application.
+    Config {
+        #[clap(subcommand)]
+        cmd: ConfigSubcommand,
+    },
 }

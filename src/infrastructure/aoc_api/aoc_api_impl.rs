@@ -63,7 +63,7 @@ impl AocApi {
             .context("No answer in the parsed body")?;
         let answer_text = html2text::from_read(
             answer.text().collect::<Vec<_>>().join("").as_bytes(),
-            self.configuration.cli.output_width,
+            self.configuration.cli.output_width as usize,
         );
         Ok(answer_text)
     }
