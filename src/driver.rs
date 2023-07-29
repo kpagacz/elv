@@ -187,6 +187,23 @@ impl Driver {
 
         Ok(leaderboard.cli_fmt(&self.configuration))
     }
+
+    pub fn update_config_value<T>(key: &str, value: T) -> Result<(), anyhow::Error>
+    where
+        T: Into<config::Value>,
+    {
+        Configuration::update_configuration_key(key, value)?;
+        Ok(())
+    }
+
+    pub fn get_config_map() -> Result<config::Map<String, config::Value>, anyhow::Error> {
+        Ok(Configuration::get_file_configuration_map()?)
+    }
+
+    pub fn set_config_key(key: String, value: String) -> Result<(), anyhow::Error> {
+        Configuration::update_configuration_key(&key, value)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
