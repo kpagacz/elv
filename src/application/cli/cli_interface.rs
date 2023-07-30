@@ -9,3 +9,14 @@ pub struct CliInterface {
     #[command(subcommand)]
     pub command: CliCommand,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cli_parses() {
+        use clap::CommandFactory;
+        CliInterface::command().debug_assert()
+    }
+}

@@ -3,13 +3,22 @@ use std::collections::HashMap;
 use anyhow::Context;
 use chrono::TimeZone;
 
-use crate::domain::ports::{AocClient, GetLeaderboard, InputCache, InputCacheError};
+use super::aoc_api::AocApi;
+use super::cli_display::CliDisplay;
+use super::configuration::Configuration;
+use super::http_description::HttpDescription;
+use super::input_cache::FileInputCache;
+use super::submission_history::SubmissionHistory;
+use super::{aoc_api::aoc_client_impl::ResponseStatus, find_riddle_part::FindRiddlePart};
+use crate::domain::{
+    ports::{
+        aoc_client::AocClient,
+        get_leaderboard::GetLeaderboard,
+        input_cache::{InputCache, InputCacheError},
+    },
+    RiddlePart,
+};
 use crate::domain::{DurationString, Submission, SubmissionStatus};
-use crate::infrastructure::aoc_api::aoc_client_impl::ResponseStatus;
-use crate::infrastructure::aoc_api::AocApi;
-use crate::infrastructure::{CliDisplay, FileInputCache};
-use crate::infrastructure::{Configuration, HttpDescription};
-use crate::submission_history::SubmissionHistory;
 
 #[derive(Debug, Default)]
 pub struct Driver {
@@ -44,7 +53,7 @@ impl Driver {
 
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
-        let input = aoc_api.get_input(&year, &day);
+        let input = aoc_api.get_input(year, day);
         if input.status == ResponseStatus::Ok {
             if FileInputCache::save(&input.body, year, day).is_err() {
                 eprintln!("Failed saving the input to the cache");
@@ -59,7 +68,7 @@ impl Driver {
         &self,
         year: i32,
         day: i32,
-        part: crate::domain::RiddlePart,
+        part: RiddlePart,
         answer: String,
     ) -> Result<(), anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
@@ -124,6 +133,14 @@ impl Driver {
         Ok(())
     }
 
+    /// Clears the cache of the application
+    ///
+    /// # Example
+    /// ```
+    /// use elv::Driver;
+    /// let driver = Driver::default();
+    /// driver.clear_cache();
+    /// ```
     pub fn clear_cache(&self) -> Result<(), anyhow::Error> {
         FileInputCache::clear()?;
         SubmissionHistory::clear()?;
@@ -135,7 +152,7 @@ impl Driver {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
-            .get_description::<HttpDescription>(&year, &day)?
+            .get_description::<HttpDescription>(year, day)?
             .cli_fmt(&self.configuration))
     }
 
@@ -188,14 +205,6 @@ impl Driver {
         Ok(leaderboard.cli_fmt(&self.configuration))
     }
 
-    pub fn update_config_value<T>(key: &str, value: T) -> Result<(), anyhow::Error>
-    where
-        T: Into<config::Value>,
-    {
-        Configuration::update_configuration_key(key, value)?;
-        Ok(())
-    }
-
     pub fn get_config_map() -> Result<config::Map<String, config::Value>, anyhow::Error> {
         Ok(Configuration::get_file_configuration_map()?)
     }
@@ -203,6 +212,17 @@ impl Driver {
     pub fn set_config_key(key: String, value: String) -> Result<(), anyhow::Error> {
         Configuration::update_configuration_key(&key, value)?;
         Ok(())
+    }
+
+    pub(crate) fn guess_riddle_part(
+        &self,
+        year: i32,
+        day: i32,
+    ) -> Result<RiddlePart, anyhow::Error> {
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_client = AocApi::new(http_client, self.configuration.clone());
+
+        aoc_client.find(year, day)
     }
 }
 

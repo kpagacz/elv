@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use crate::domain::{
-    ports::{AocClientError, GetLeaderboard},
+    ports::{errors::AocClientError, get_leaderboard::GetLeaderboard},
     Leaderboard, LeaderboardError,
 };
 

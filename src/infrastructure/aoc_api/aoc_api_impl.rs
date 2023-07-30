@@ -1,6 +1,6 @@
 use anyhow::Context;
 
-use crate::Configuration;
+use super::super::configuration::Configuration;
 
 use super::{AocApi, AOC_URL};
 
