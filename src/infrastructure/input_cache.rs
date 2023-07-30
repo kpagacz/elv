@@ -1,5 +1,5 @@
-use crate::domain::ports::{InputCache, InputCacheError};
-use crate::Configuration;
+use super::configuration::Configuration;
+use crate::domain::ports::input_cache::{InputCache, InputCacheError};
 
 pub struct FileInputCache;
 
@@ -60,7 +60,7 @@ impl InputCache for FileInputCache {
 #[cfg(test)]
 mod tests {
     use super::FileInputCache;
-    use crate::domain::ports::{InputCache, InputCacheError};
+    use crate::domain::ports::input_cache::{InputCache, InputCacheError};
 
     #[test]
     fn cache_tests() -> Result<(), InputCacheError> {

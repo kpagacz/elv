@@ -1,9 +1,7 @@
 use thiserror::Error;
 
-use crate::{
-    domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus},
-    infrastructure::Configuration,
-};
+use super::configuration::Configuration;
+use crate::domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 
 #[derive(Error, Debug)]
 pub enum SubmissionHistoryError {

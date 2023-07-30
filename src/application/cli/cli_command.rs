@@ -93,15 +93,15 @@ pub enum CliCommand {
     /// directory.
     #[command(visible_aliases = ["s"])]
     Submit {
-        /// The part of the challenge
-        ///
-        /// This argument is required. It must be either "one" or "two".
-        part: crate::domain::RiddlePart,
-
         /// The answer to the challenge
         ///
         /// Your answer to the challenge. This argument is required.
         answer: String,
+
+        /// The part of the challenge
+        ///
+        /// Possible values: "one", "two".
+        part: Option<crate::domain::RiddlePart>,
 
         #[command(flatten)]
         riddle_args: RiddleArgs,
@@ -126,7 +126,7 @@ pub enum CliCommand {
         year: Option<u16>,
     },
 
-    /// 🗑️  Clears the cache
+    /// 🗑️  Clear the cache
     ///
     /// This command will clear the cache of the application. The cache is used
     /// to store the input and the results of submissions. This command will

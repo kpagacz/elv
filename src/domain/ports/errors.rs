@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::domain::LeaderboardError;
+use super::super::leaderboard::LeaderboardError;
 
 #[derive(Error, Debug)]
 pub enum AocClientError {

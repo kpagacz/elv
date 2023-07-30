@@ -11,6 +11,7 @@ test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch
 4.  [Examples](#examples)
 5.  [FAQ](#faq)
 6.  [Configuration](#configuration)
+7.  [Get Help](#help)
 
 ## Introduction
 
@@ -26,6 +27,7 @@ instead of the webpage. So far `elv` supports:
 - downloading riddles' description
 - downloading a riddle's input for a given year and day
 - submitting answers to a riddle
+- automatically guessing what part of the riddle you want to submit
 - getting the official leaderboards for a given year
 - guessing the year and day of a riddle based on the current date
 - caching `AoC` responses whenever possible, so you minimize your
@@ -189,7 +191,7 @@ with Advent of Code API using `elv`.
 
 This works only while the event is being held, not all the time of the
 year. While the event is not held, you need to specify the year and day
-of the challenge explicitly using `-y' and`-d' parameters.
+of the challenge explicitly using `-y` and `-d` parameters.
 
 ```console
 elv desc
@@ -210,7 +212,7 @@ elv desc -y 2021 -d 1
 
 This works only while the event is being held, not all the time of the
 year. While the event is not held, you need to specify the year and day
-of the challenge explicitly using `-y' and`-d' parameters.
+of the challenge explicitly using `-y` and `-d` parameters.
 
 ```console
 elv input
@@ -231,11 +233,11 @@ elv input -y 2021 -d 1
 
 This works only while the event is being held, not all the time of the
 year. While the event is not held, you need to specify the year and day
-of the challenge explicitly using `-y' and`-d' parameters.
+of the challenge explicitly using `-y` and `-d` parameters.
 
 ```console
-elv submit one <SOLUTION>
-elv submit two <SOLUTION>
+elv submit <SOLUTION>
+elv submit <SOLUTION>
 ```
 
 #### Submitting the solution for a particular riddle
@@ -243,7 +245,18 @@ elv submit two <SOLUTION>
 You specify the day and the year of the riddle.
 
 ```console
-elv submit -y 2021 -d 1 one <SOLUTION>
+elv submit -y 2021 -d 1 <SOLUTION>
+```
+
+#### Specifying the part of the riddle
+
+`elv` tries to guess the part of the riddle you are solving based on the
+riddle description. If for some reason you want to override it, or the
+application fails to guess the part, you can specify it explicitly:
+
+```console
+elv submit -y 2021 -d 1 <SOLUTION> one
+elv submit -y 2021 -d 1 <SOLUTION> two
 ```
 
 ### Getting the leaderboard
@@ -252,7 +265,7 @@ elv submit -y 2021 -d 1 one <SOLUTION>
 
 This works only while the event is being held, not all the time of the
 year. While the event is not held, you need to specify the year
-explicitly using `-y' parameter.
+explicitly using `-y` parameter.
 
 ```console
 elv leaderboard
@@ -317,9 +330,8 @@ passed to `elv`. The application supports the following scenarios:
 
 ### How can I store the session token?
 
-`elv` looks for your token in three places, starting from the first on
-the below list and moving to the next one if it did not find the token
-already.
+You can set the session token in `elv`'s configuration using multiple
+ways, the most convenient being:
 
 1. Set it in the configuration using the CLI:
 
@@ -356,15 +368,25 @@ already.
 
 1.  In a configuration file. `elv` creates a configuration file in your
     home directory. You can find the configuration file in a directory
-    listed by running `elv list-dirs` in your terminal. Your config file
-    should look like this:
+    listed by running `elv list-dirs` in your terminal. You should store
+    the token in the `[aoc]` section, under the `token` key:
 
     ```toml
     [aoc]
     token = "<YOUR TOKEN HERE>"
     ```
 
-### How can I get the value of the session token to pass it to `elv?
+### What if I store the session token in the configuration file and pass it as an argument to `elv`?
+
+`elv` looks for your token in three places, starting from the first on
+the below list and moving to the next one if it did not find the token
+already.
+
+1. `elv`'s configuration file.
+1. The `AOC_TOKEN` environment variable.
+1. The `-t` parameter to the CLI command.
+
+### How can I get the value of the session token to pass it to `elv`?
 
 The session token is sent to your HTTP client (usually your browser) as
 a cookie when you log into the Advent of Code web page. The easiest way
@@ -423,3 +445,9 @@ The configuration file is written in `TOML`. You can set the following values
   connecting to `AOC` servers
 - `cli.output_width` - the column width of the output when calling
   `elv description`
+
+## Help
+
+If something is not working as expected, or you have an idea for an improvement,
+feel free to contact me at: `konrad.pagacz@gmail.com`, open an issue or a pull
+request.

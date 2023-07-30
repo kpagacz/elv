@@ -1,6 +1,6 @@
 use crate::{domain::Description, Configuration};
 
-use super::CliDisplay;
+use super::cli_display::CliDisplay;
 
 pub struct HttpDescription {
     year: u16,
@@ -9,14 +9,14 @@ pub struct HttpDescription {
 }
 
 impl HttpDescription {
-    fn part_one(&self) -> Option<String> {
+    pub fn part_one(&self) -> Option<String> {
         let part_one_selector = scraper::Selector::parse(".day-desc").unwrap();
         let binding = scraper::Html::parse_document(&self.body);
         let select = binding.select(&part_one_selector);
         select.map(|e| e.inner_html()).next()
     }
 
-    fn part_one_answer(&self) -> Option<String> {
+    pub fn part_one_answer(&self) -> Option<String> {
         let part_one_answer_selector = scraper::Selector::parse("main > p").unwrap();
         let binding = scraper::Html::parse_document(&self.body);
         binding
@@ -25,14 +25,14 @@ impl HttpDescription {
             .find(|html| html.starts_with("Your puzzle answer was"))
     }
 
-    fn part_two(&self) -> Option<String> {
+    pub fn part_two(&self) -> Option<String> {
         let part_one_selector = scraper::Selector::parse(".day-desc").unwrap();
         let binding = scraper::Html::parse_document(&self.body);
         let select = binding.select(&part_one_selector);
         select.map(|e| e.inner_html()).skip(1).next()
     }
 
-    fn part_two_answer(&self) -> Option<String> {
+    pub fn part_two_answer(&self) -> Option<String> {
         let part_one_answer_selector = scraper::Selector::parse("main > p").unwrap();
         let binding = scraper::Html::parse_document(&self.body);
         binding
@@ -126,5 +126,61 @@ impl CliDisplay for HttpDescription {
             configuration.cli.output_width as usize,
             html2text::render::text_renderer::TrivialDecorator::new(),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    fn get_resource_file(file: &str) -> String {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push(format!("tests/resources/{}", file));
+
+        std::fs::read_to_string(d.as_path()).unwrap()
+    }
+
+    #[test]
+    fn no_part_done() {
+        let description = HttpDescription {
+            year: 2022,
+            day: 1,
+            body: get_resource_file("riddle-description-no-part-done.html"),
+        };
+
+        assert!(description.part_one().is_some());
+        assert!(description.part_two().is_none());
+        assert!(description.part_one_answer().is_none());
+        assert!(description.part_two_answer().is_none());
+    }
+
+    #[test]
+    fn first_part_done() {
+        let description = HttpDescription {
+            year: 2022,
+            day: 1,
+            body: get_resource_file("riddle-description-first-part-done.html"),
+        };
+
+        assert!(description.part_one().is_some());
+        assert!(description.part_one_answer().is_some());
+        assert!(description.part_two().is_some());
+        assert!(description.part_two_answer().is_none());
+    }
+
+    #[test]
+    fn second_part_done() {
+        let description = HttpDescription {
+            year: 2022,
+            day: 1,
+            body: get_resource_file("riddle-description-both-parts-done.html"),
+        };
+
+        assert!(description.part_one().is_some());
+        assert!(description.part_one_answer().is_some());
+        assert!(description.part_two().is_some());
+        assert!(description.part_two_answer().is_some());
     }
 }

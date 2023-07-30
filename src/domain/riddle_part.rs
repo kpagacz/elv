@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, clap::ValueEnum)]
 pub enum RiddlePart {
     One = 1,
-    Two,
+    Two = 2,
 }
 
 impl std::fmt::Display for RiddlePart {

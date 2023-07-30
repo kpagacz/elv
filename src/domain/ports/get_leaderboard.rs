@@ -1,4 +1,4 @@
-use crate::domain::Leaderboard;
+use super::super::leaderboard::Leaderboard;
 
 use super::errors::AocClientError;
 
