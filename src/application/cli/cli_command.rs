@@ -17,8 +17,8 @@ pub struct RiddleArgs {
     /// The day of the challenge
     ///
     /// If you do not supply a day, the current day of the month will be used
-    /// (if the current month is December). If the current month is not December
-    /// and you do not supply the year, the previous year will be used.
+    /// (if the current month is December). If the current month is not December,
+    /// the application will not be able to guess the day.
     #[arg(short, long, value_parser = clap::value_parser!(i32))]
     pub day: Option<i32>,
 }
@@ -141,7 +141,10 @@ pub enum CliCommand {
 
     /// 🔍 Show and edit the configuration
     ///
-    /// Governs the configuration of the application.
+    /// Token management
+    /// You can save your Advent of Code token using this command.
+    /// See `elv --help` and `elv config set --help` for more information.
+    #[command(verbatim_doc_comment)]
     Config {
         #[clap(subcommand)]
         cmd: ConfigSubcommand,
