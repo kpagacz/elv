@@ -222,7 +222,7 @@ impl Driver {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
 
-        aoc_client.find(year, day)
+        aoc_client.find_unsolved_part(year, day)
     }
 }
 
