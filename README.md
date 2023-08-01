@@ -28,6 +28,7 @@ instead of the webpage. So far `elv` supports:
 - downloading a riddle's input for a given year and day
 - submitting answers to a riddle
 - automatically guessing what part of the riddle you want to submit
+- showing your star progress for a given year including the ASCII art
 - getting the official leaderboards for a given year
 - guessing the year and day of a riddle based on the current date
 - caching `AoC` responses whenever possible, so you minimize your
@@ -257,6 +258,17 @@ application fails to guess the part, you can specify it explicitly:
 ```console
 elv submit -y 2021 -d 1 <SOLUTION> one
 elv submit -y 2021 -d 1 <SOLUTION> two
+```
+
+### Getting the stars and the ASCII art
+
+`elv` can print the ASCII art and the stars you have collected so far
+for each year:
+
+```console
+elv stars # prints the stars for the latest year
+elv stars <YEAR> # prints the stars for the given year
+elv stars 2019 # prints the stars for the year 2019
 ```
 
 ### Getting the leaderboard

@@ -122,8 +122,20 @@ pub enum CliCommand {
         ///
         /// If you do not supply a year, this command will pull the leaderboards from
         /// the latest event.
-        #[arg(short, long, value_parser = clap::value_parser!(u16))]
-        year: Option<u16>,
+        #[arg(short, long, value_parser = clap::value_parser!(i32))]
+        year: Option<i32>,
+    },
+
+    /// ⭐ Show the stars page
+    ///
+    /// This command downloads the star page and displays the ASCII pattern along with
+    /// the stars.
+    Stars {
+        /// The year of the challenge
+        ///
+        /// If you do not supply a year, this command will pull the leaderboards from
+        /// the latest event.
+        year: Option<i32>,
     },
 
     /// 🗑️  Clear the cache

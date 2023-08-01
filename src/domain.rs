@@ -5,7 +5,7 @@ pub mod ports;
 mod riddle_date;
 mod riddle_part;
 pub(crate) mod solved_parts;
-pub(crate) mod stars;
+pub mod stars;
 mod submission;
 mod submission_result;
 mod submission_status;

@@ -66,7 +66,7 @@ impl AocApi {
 }
 
 impl GetLeaderboard for AocApi {
-    fn get_leaderboard(&self, year: u16) -> Result<Leaderboard, AocClientError> {
+    fn get_leaderboard(&self, year: i32) -> Result<Leaderboard, AocClientError> {
         let url = reqwest::Url::parse(&format!("{}/{}/leaderboard", AOC_URL, year))?;
         let mut response = self.http_client.get(url).send()?.error_for_status()?;
         let mut body = String::from("");
