@@ -49,6 +49,7 @@ impl ElvCli {
             CliCommand::Leaderboard { token_args, year } => {
                 handle_get_leaderboard(token_args, year)
             }
+            CliCommand::Stars { year } => handle_get_stars(year),
             CliCommand::ClearCache => handle_clear_cache_command(),
             CliCommand::ListDirs => handle_list_dirs_command(),
             CliCommand::Config { cmd } => match cmd {
@@ -170,11 +171,19 @@ impl ElvCli {
             }
         }
 
-        fn handle_get_leaderboard(token_args: TokenArgs, year: Option<u16>) {
+        fn handle_get_leaderboard(token_args: TokenArgs, year: Option<i32>) {
             let driver = get_driver(Some(token_args), None);
-            match driver.get_leaderboard(year.unwrap_or_else(|| chrono::Utc::now().year() as u16)) {
+            match driver.get_leaderboard(year.unwrap_or_else(determine_year)) {
                 Ok(text) => println!("{text}"),
                 Err(e) => eprintln!("❌ Error when getting the leaderboards: {}", e.to_string()),
+            }
+        }
+
+        fn handle_get_stars(year: Option<i32>) {
+            let driver = get_driver(None, None);
+            match driver.get_stars(year.unwrap_or_else(determine_year)) {
+                Ok(stars) => println!("{}", stars),
+                Err(e) => eprintln!("❌ Failure: {}", e.to_string()),
             }
         }
 
@@ -199,6 +208,15 @@ impl ElvCli {
             let best_guess_date =
                 RiddleDate::best_guess(riddle_args.year, riddle_args.day, est_now)?;
             Ok((best_guess_date.year, best_guess_date.day))
+        }
+
+        fn determine_year() -> i32 {
+            let est_now = chrono::Utc::now() - chrono::Duration::hours(4);
+            if est_now.month() == 12 {
+                est_now.year()
+            } else {
+                est_now.year() - 1
+            }
         }
 
         fn build_configuration(

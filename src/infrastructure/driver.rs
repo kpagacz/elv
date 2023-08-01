@@ -10,6 +10,8 @@ use super::http_description::HttpDescription;
 use super::input_cache::FileInputCache;
 use super::submission_history::SubmissionHistory;
 use super::{aoc_api::aoc_client_impl::ResponseStatus, find_riddle_part::FindRiddlePart};
+use crate::domain::ports::get_stars::GetStars;
+use crate::domain::stars::Stars;
 use crate::domain::{
     ports::{
         aoc_client::AocClient,
@@ -22,7 +24,7 @@ use crate::domain::{DurationString, Submission, SubmissionStatus};
 
 #[derive(Debug, Default)]
 pub struct Driver {
-    configuration: Configuration,
+    pub configuration: Configuration,
 }
 
 impl Driver {
@@ -156,23 +158,13 @@ impl Driver {
             .cli_fmt(&self.configuration))
     }
 
-    fn is_input_released_yet(
-        &self,
-        year: i32,
-        day: i32,
-        now: &chrono::DateTime<chrono::Utc>,
-    ) -> Result<bool, anyhow::Error> {
-        let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)
-            .unwrap()
-            .with_ymd_and_hms(year as i32, 12, day as u32, 0, 0, 0)
-            .single()
-        {
-            None => anyhow::bail!("Invalid date"),
-            Some(time) => time,
-        };
-
-        Ok(now >= &input_release_time)
+    /// Gets the stars from a specified year
+    pub fn get_stars(&self, year: i32) -> Result<Stars, anyhow::Error> {
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_api = AocApi::new(http_client, self.configuration.clone());
+        Ok(aoc_api.get_stars(year)?)
     }
+
     /// Lists the directories used by the application
     /// # Example
     /// ```
@@ -197,7 +189,7 @@ impl Driver {
         Ok(directories)
     }
 
-    pub fn get_leaderboard(&self, year: u16) -> Result<String, anyhow::Error> {
+    pub fn get_leaderboard(&self, year: i32) -> Result<String, anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
         let leaderboard = aoc_client.get_leaderboard(year)?;
@@ -222,7 +214,25 @@ impl Driver {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
 
-        aoc_client.find(year, day)
+        aoc_client.find_unsolved_part(year, day)
+    }
+
+    fn is_input_released_yet(
+        &self,
+        year: i32,
+        day: i32,
+        now: &chrono::DateTime<chrono::Utc>,
+    ) -> Result<bool, anyhow::Error> {
+        let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)
+            .unwrap()
+            .with_ymd_and_hms(year as i32, 12, day as u32, 0, 0, 0)
+            .single()
+        {
+            None => anyhow::bail!("Invalid date"),
+            Some(time) => time,
+        };
+
+        Ok(now >= &input_release_time)
     }
 }
 

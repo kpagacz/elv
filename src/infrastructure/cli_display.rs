@@ -6,12 +6,10 @@ pub trait CliDisplay {
 
 impl CliDisplay for Leaderboard {
     fn cli_fmt(&self, _configuration: &Configuration) -> String {
-        let leaderboard_text = self
-            .entries
+        self.entries
             .iter()
             .map(|entry| format!("{}) {} {}", entry.position, entry.points, entry.username))
             .collect::<Vec<_>>()
-            .join("\n");
-        format!("{}", leaderboard_text)
+            .join("\n")
     }
 }

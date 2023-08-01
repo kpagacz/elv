@@ -1,5 +1,5 @@
 use crate::domain::RiddlePart;
 
 pub trait FindRiddlePart {
-    fn find(&self, year: i32, day: i32) -> Result<RiddlePart, anyhow::Error>;
+    fn find_unsolved_part(&self, year: i32, day: i32) -> Result<RiddlePart, anyhow::Error>;
 }
