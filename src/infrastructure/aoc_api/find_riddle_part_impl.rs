@@ -1,6 +1,5 @@
-use crate::domain::ports::aoc_client::AocClient;
-use crate::infrastructure::http_description::HttpDescription;
-use crate::{domain::RiddlePart, infrastructure::find_riddle_part::FindRiddlePart};
+use crate::domain::{ports::aoc_client::AocClient, riddle_part::RiddlePart};
+use crate::infrastructure::{find_riddle_part::FindRiddlePart, http_description::HttpDescription};
 
 use super::AocApi;
 

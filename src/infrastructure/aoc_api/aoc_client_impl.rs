@@ -1,7 +1,10 @@
 use super::{AocApi, AOC_URL};
-use crate::domain::ports::errors::AocClientError;
 use crate::domain::{
-    ports::aoc_client::AocClient, RiddlePart, Submission, SubmissionResult, SubmissionStatus,
+    ports::{aoc_client::AocClient, errors::AocClientError},
+    riddle_part::RiddlePart,
+    submission::Submission,
+    submission_result::SubmissionResult,
+    submission_status::SubmissionStatus,
 };
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
 use std::io::Read;

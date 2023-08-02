@@ -1,4 +1,4 @@
-use crate::{domain::Description, Configuration};
+use crate::{domain::description::Description, Configuration};
 
 use super::cli_display::CliDisplay;
 

@@ -1,8 +1,9 @@
-use crate::domain::ports::errors::AocClientError;
-use crate::domain::ports::get_stars::GetStars;
-use crate::domain::solved_parts::SolvedParts;
-use crate::domain::stars::Stars;
-use crate::infrastructure::aoc_api::AOC_URL;
+use super::AOC_URL;
+use crate::domain::{
+    ports::{errors::AocClientError, get_stars::GetStars},
+    solved_parts::SolvedParts,
+    stars::Stars,
+};
 
 use super::AocApi;
 
@@ -12,66 +13,67 @@ impl GetStars for AocApi {
         Stars::from_readable(self.http_client.get(url).send()?.error_for_status()?)
     }
 }
+
+// It's impossible to implement the trait
+// impl<T: std::io::Read> TryFrom<T> for Stars
+// because there is already a blanket implementation
+// of this trait in the standard library which conflicts
+// with the one above. So this is one workaround...
 impl Stars {
-    fn parse_http_response(calendar_http_body: String) -> Result<Self, AocClientError> {
-        let document = scraper::Html::parse_document(&calendar_http_body);
-        let calendar_entries_selector =
-            scraper::Selector::parse("[class^='calendar-day']:not(.calendar-day)").unwrap();
-        let solved_parts = document
-            .select(&calendar_entries_selector)
-            .map(|day| {
-                match (
-                    day.value()
-                        .classes()
-                        .any(|class| class == "calendar-complete"),
-                    day.value()
-                        .classes()
-                        .any(|class| class == "calendar-verycomplete"),
-                ) {
-                    (false, false) => SolvedParts::None,
-                    (true, false) => SolvedParts::One,
-                    (_, _) => SolvedParts::Both,
-                }
-            })
-            .collect::<Vec<_>>();
-        let calendar_entries = document
-            .select(&calendar_entries_selector)
-            .collect::<Vec<_>>();
-
-        let entries_without_stars = std::iter::zip(solved_parts.clone(), calendar_entries)
-            .map(|(solved_part, entry)| {
-                let text = entry.text().collect::<Vec<_>>();
-                Ok(match solved_part {
-                    SolvedParts::Both => text.join(""),
-                    SolvedParts::One => text
-                        .join("")
-                        .strip_suffix("*")
-                        .ok_or_else(|| AocClientError::GetStarsError)?
-                        .to_owned(),
-                    SolvedParts::None => text
-                        .join("")
-                        .strip_suffix("**")
-                        .ok_or_else(|| AocClientError::GetStarsError)?
-                        .to_owned(),
-                })
-            })
-            .collect::<Result<Vec<String>, AocClientError>>()?;
-        Ok(Self::new(solved_parts, entries_without_stars))
-    }
-
-    // It's impossible to implement the trait
-    // impl<T: std::io::Read> TryFrom<T> for Stars
-    // because there is already a blanket implementation
-    // of this trait in the standard library which conflicts
-    // with the one above. So this is one workaround...
-    pub fn from_readable<T: std::io::Read>(mut readable: T) -> Result<Self, AocClientError> {
+    pub fn from_readable<T: std::io::Read>(mut readable: T) -> Result<Stars, AocClientError> {
         let mut body = String::new();
         readable
             .read_to_string(&mut body)
             .map_err(|_| AocClientError::GetStarsError)?;
 
-        Self::parse_http_response(body)
+        parse_http_response(body)
     }
+}
+
+fn parse_http_response(calendar_http_body: String) -> Result<Stars, AocClientError> {
+    let document = scraper::Html::parse_document(&calendar_http_body);
+    let calendar_entries_selector =
+        scraper::Selector::parse("[class^='calendar-day']:not(.calendar-day)").unwrap();
+    let solved_parts = document
+        .select(&calendar_entries_selector)
+        .map(|day| {
+            match (
+                day.value()
+                    .classes()
+                    .any(|class| class == "calendar-complete"),
+                day.value()
+                    .classes()
+                    .any(|class| class == "calendar-verycomplete"),
+            ) {
+                (false, false) => SolvedParts::None,
+                (true, false) => SolvedParts::One,
+                (_, _) => SolvedParts::Both,
+            }
+        })
+        .collect::<Vec<_>>();
+    let calendar_entries = document
+        .select(&calendar_entries_selector)
+        .collect::<Vec<_>>();
+
+    let entries_without_stars = std::iter::zip(solved_parts.clone(), calendar_entries)
+        .map(|(solved_part, entry)| {
+            let text = entry.text().collect::<Vec<_>>();
+            Ok(match solved_part {
+                SolvedParts::Both => text.join(""),
+                SolvedParts::One => text
+                    .join("")
+                    .strip_suffix("*")
+                    .ok_or_else(|| AocClientError::GetStarsError)?
+                    .to_owned(),
+                SolvedParts::None => text
+                    .join("")
+                    .strip_suffix("**")
+                    .ok_or_else(|| AocClientError::GetStarsError)?
+                    .to_owned(),
+            })
+        })
+        .collect::<Result<Vec<String>, AocClientError>>()?;
+    Ok(Stars::new(solved_parts, entries_without_stars))
 }
 
 #[cfg(test)]
@@ -108,7 +110,7 @@ mod tests {
 <a aria-label="Day 1" href="/2019/day/1" class="calendar-day1">       ..'    .'  <span class="calendar-s">.</span>   :<span class="calendar-s">.</span>    .'     :     <span class="calendar-s">.</span>.'   :   <span class="calendar-day"> 1</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
         </pre>"#.to_owned();
 
-        let stars = Stars::parse_http_response(calendar).unwrap();
+        let stars = parse_http_response(calendar).unwrap();
         assert!(stars.pattern.len() == 25);
         assert!(stars.stars.len() == 25);
         assert!(stars.stars.last().unwrap() == &SolvedParts::None);
@@ -143,7 +145,7 @@ mod tests {
 <a aria-label="Day 2" href="/2018/day/2" class="calendar-day2">                                                   <span class="calendar-day"> 2</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
 <a aria-label="Day 1, one star" href="/2018/day/1" class="calendar-day1 calendar-complete">                  _  _ __ ___ __ _  _              <span class="calendar-day"> 1</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
 </pre>"#.to_owned();
-        let stars = Stars::parse_http_response(calendar).unwrap();
+        let stars = parse_http_response(calendar).unwrap();
         assert!(stars.pattern.len() == 25);
         assert!(stars.stars.len() == 25);
         assert!(stars.stars.last().unwrap() == &SolvedParts::One);
@@ -180,7 +182,7 @@ mod tests {
 <a aria-label="Day 2, two stars" href="/2022/day/2" class="calendar-day2 calendar-verycomplete"><span class="calendar-color-s">-~------'</span><span class="calendar-color-u">    ~    ~ </span><span class="calendar-color-s">'--~-----~-~----___________--</span>  <span class="calendar-day"> 2</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
 <a aria-label="Day 1, two stars" href="/2022/day/1" class="calendar-day1 calendar-verycomplete"><span class="calendar-color-u">  ~    ~  ~      ~     ~ ~   ~     ~  ~  ~   ~   </span>  <span class="calendar-day"> 1</span> <span class="calendar-mark-complete">*</span><span class="calendar-mark-verycomplete">*</span></a>
 </pre>"#.to_owned();
-        let stars = Stars::parse_http_response(calendar).unwrap();
+        let stars = parse_http_response(calendar).unwrap();
         assert!(stars.pattern.len() == 25);
         assert!(stars.stars.len() == 25);
         assert!(stars

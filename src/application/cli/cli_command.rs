@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Args;
 
+use crate::domain::riddle_part::RiddlePart;
+
 use super::cli_config_subcommand::ConfigSubcommand;
 
 #[derive(Debug, Args)]
@@ -101,7 +103,7 @@ pub enum CliCommand {
         /// The part of the challenge
         ///
         /// Possible values: "one", "two".
-        part: Option<crate::domain::RiddlePart>,
+        part: Option<RiddlePart>,
 
         #[command(flatten)]
         riddle_args: RiddleArgs,

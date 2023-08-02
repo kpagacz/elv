@@ -1,6 +1,9 @@
-use super::super::description::Description;
-use super::super::{Submission, SubmissionResult};
-use crate::infrastructure::aoc_api::aoc_client_impl::InputResponse;
+use crate::{
+    domain::{
+        description::Description, submission::Submission, submission_result::SubmissionResult,
+    },
+    infrastructure::aoc_api::aoc_client_impl::InputResponse,
+};
 
 use super::errors::AocClientError;
 

@@ -1,4 +1,4 @@
-use super::{Submission, SubmissionStatus};
+use super::{submission::Submission, submission_status::SubmissionStatus};
 
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, Clone)]
 pub struct SubmissionResult {

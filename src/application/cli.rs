@@ -9,15 +9,13 @@ use anyhow::Context;
 use chrono::Datelike;
 use clap::Parser;
 
-use crate::application::cli::cli_command::CliCommand;
-use crate::application::cli::cli_command::RiddleArgs;
-use crate::application::cli::cli_command::TokenArgs;
-use crate::application::cli::cli_config_subcommand::ConfigSubcommand;
-use crate::application::cli::cli_interface::CliInterface;
-use crate::domain::RiddleDate;
-use crate::domain::RiddlePart;
-use crate::Configuration;
-use crate::Driver;
+use crate::application::cli::{
+    cli_command::{CliCommand, RiddleArgs, TokenArgs},
+    cli_config_subcommand::ConfigSubcommand,
+    cli_interface::CliInterface,
+};
+use crate::domain::{riddle_date::RiddleDate, riddle_part::RiddlePart};
+use crate::{Configuration, Driver};
 
 pub struct ElvCli {}
 

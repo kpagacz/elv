@@ -1,11 +1,22 @@
 use std::io::Read;
 
 use crate::domain::{
+    leaderboard::{Leaderboard, LeaderboardError},
     ports::{errors::AocClientError, get_leaderboard::GetLeaderboard},
-    Leaderboard, LeaderboardError,
 };
 
 use super::{AocApi, AOC_URL};
+
+impl GetLeaderboard for AocApi {
+    fn get_leaderboard(&self, year: i32) -> Result<Leaderboard, AocClientError> {
+        let url = reqwest::Url::parse(&format!("{}/{}/leaderboard", AOC_URL, year))?;
+        let mut response = self.http_client.get(url).send()?.error_for_status()?;
+        let mut body = String::from("");
+        response.read_to_string(&mut body)?;
+
+        Ok(Self::parse_leaderboard_response(body)?)
+    }
+}
 
 impl AocApi {
     fn parse_leaderboard_response(response_body: String) -> Result<Leaderboard, LeaderboardError> {
@@ -62,17 +73,6 @@ impl AocApi {
             .collect::<Vec<_>>();
 
         Leaderboard::try_from(entries)
-    }
-}
-
-impl GetLeaderboard for AocApi {
-    fn get_leaderboard(&self, year: i32) -> Result<Leaderboard, AocClientError> {
-        let url = reqwest::Url::parse(&format!("{}/{}/leaderboard", AOC_URL, year))?;
-        let mut response = self.http_client.get(url).send()?.error_for_status()?;
-        let mut body = String::from("");
-        response.read_to_string(&mut body)?;
-
-        Ok(Self::parse_leaderboard_response(body)?)
     }
 }
 

@@ -3,24 +3,30 @@ use std::collections::HashMap;
 use anyhow::Context;
 use chrono::TimeZone;
 
-use super::aoc_api::AocApi;
-use super::cli_display::CliDisplay;
-use super::configuration::Configuration;
-use super::http_description::HttpDescription;
-use super::input_cache::FileInputCache;
-use super::submission_history::SubmissionHistory;
-use super::{aoc_api::aoc_client_impl::ResponseStatus, find_riddle_part::FindRiddlePart};
-use crate::domain::ports::get_stars::GetStars;
-use crate::domain::stars::Stars;
+use super::{
+    aoc_api::{aoc_client_impl::ResponseStatus, AocApi},
+    cli_display::CliDisplay,
+    configuration::Configuration,
+    find_riddle_part::FindRiddlePart,
+    http_description::HttpDescription,
+    input_cache::FileInputCache,
+    submission_history::SubmissionHistory,
+};
 use crate::domain::{
+    duration_string::DurationString,
     ports::{
         aoc_client::AocClient,
         get_leaderboard::GetLeaderboard,
+        get_private_leaderboard::GetPrivateLeaderboard,
+        get_stars::GetStars,
         input_cache::{InputCache, InputCacheError},
     },
-    RiddlePart,
+    private_leaderboard::PrivateLeaderboard,
+    riddle_part::RiddlePart,
+    stars::Stars,
+    submission::Submission,
+    submission_status::SubmissionStatus,
 };
-use crate::domain::{DurationString, Submission, SubmissionStatus};
 
 #[derive(Debug, Default)]
 pub struct Driver {
@@ -158,7 +164,7 @@ impl Driver {
             .cli_fmt(&self.configuration))
     }
 
-    /// Gets the stars from a specified year
+    /// Gets the stars for a specified year
     pub fn get_stars(&self, year: i32) -> Result<Stars, anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
@@ -189,12 +195,23 @@ impl Driver {
         Ok(directories)
     }
 
+    /// Gets the leaderboard for a given year
     pub fn get_leaderboard(&self, year: i32) -> Result<String, anyhow::Error> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
         let leaderboard = aoc_client.get_leaderboard(year)?;
 
         Ok(leaderboard.cli_fmt(&self.configuration))
+    }
+
+    pub fn get_private_leaderboard(
+        &self,
+        leaderboard_id: &str,
+    ) -> Result<PrivateLeaderboard, anyhow::Error> {
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_client = AocApi::new(http_client, self.configuration.clone());
+
+        Ok(aoc_client.get_private_leaderboard(leaderboard_id)?)
     }
 
     pub fn get_config_map() -> Result<config::Map<String, config::Value>, anyhow::Error> {

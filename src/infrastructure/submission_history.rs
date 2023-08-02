@@ -1,7 +1,11 @@
 use thiserror::Error;
 
+use crate::domain::{
+    riddle_part::RiddlePart, submission::Submission, submission_result::SubmissionResult,
+    submission_status::SubmissionStatus,
+};
+
 use super::configuration::Configuration;
-use crate::domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 
 #[derive(Error, Debug)]
 pub enum SubmissionHistoryError {
@@ -142,8 +146,12 @@ impl SubmissionHistory {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::{
+        riddle_part::RiddlePart, submission::Submission, submission_result::SubmissionResult,
+        submission_status::SubmissionStatus,
+    };
+
     use super::SubmissionHistory;
-    use crate::domain::{RiddlePart, Submission, SubmissionResult, SubmissionStatus};
 
     #[test]
     fn can_add_submission() {
