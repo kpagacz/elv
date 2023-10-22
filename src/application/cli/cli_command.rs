@@ -186,4 +186,20 @@ pub enum CliCommand {
         #[clap(subcommand)]
         cmd: ConfigSubcommand,
     },
+
+    /// 🪙 Set the Advent Of Code token
+    ///
+    /// Token management
+    /// You can save your Advent of Code token using this command.
+    /// If you don't give any parameter to this command, it will print
+    /// the currently saved token instead.
+    /// Example:
+    /// > elv token my_token
+    /// > elv token
+    /// my_token
+    #[command(verbatim_doc_comment, visible_aliases = ["t", "sett", "set-token"])]
+    Token {
+        /// Token to be saved
+        token: Option<String>
+    }
 }

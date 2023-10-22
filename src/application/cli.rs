@@ -58,8 +58,9 @@ impl ElvCli {
             CliCommand::ListDirs => handle_list_dirs_command(),
             CliCommand::Config { cmd } => match cmd {
                 ConfigSubcommand::List {} => handle_get_config(),
-                ConfigSubcommand::Set { key, value } => handle_set_config(key, value),
+                ConfigSubcommand::Set { key, value } => handle_set_config(&key, value),
             },
+            CliCommand::Token { token } => handle_token_comamand(token),
         }
 
         fn handle_submit_command(
@@ -133,7 +134,7 @@ impl ElvCli {
                         }
                     }
                 }
-                Err(e) => eprintln!("❗️ Error when getting the input:\n\t{}", e.to_string()),
+                Err(e) => eprintln!("❌ Error when getting the input:\n\t{}", e.to_string()),
             }
         }
 
@@ -215,10 +216,21 @@ impl ElvCli {
             }
         }
 
-        fn handle_set_config(key: String, value: String) {
+        fn handle_set_config(key: &str, value: String) {
             match Driver::set_config_key(key, value) {
-                Ok(_) => println!("✅ Key successfully updated"),
+                Ok(_) => println!("✅ Key {key} successfully updated"),
                 Err(e) => eprintln!("❌ Failure: {}", e.to_string()),
+            }
+        }
+
+        fn handle_token_comamand(token: Option<String>) {
+            match token {
+                Some(token) => handle_set_config("aoc.token", token),
+                None => {
+                    let config = Configuration::new();
+                    println!("✅ Your saved token is: {}", config.aoc.token);
+                    println!("If you want to update your token, use elv t <YOUR_NEW_TOKEN>");
+                }
             }
         }
 
