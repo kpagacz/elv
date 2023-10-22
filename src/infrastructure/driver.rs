@@ -1,26 +1,32 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use chrono::TimeZone;
 
-use super::aoc_api::AocApi;
-use super::cli_display::CliDisplay;
-use super::configuration::Configuration;
-use super::http_description::HttpDescription;
-use super::input_cache::FileInputCache;
-use super::submission_history::SubmissionHistory;
-use super::{aoc_api::aoc_client_impl::ResponseStatus, find_riddle_part::FindRiddlePart};
-use crate::domain::ports::get_stars::GetStars;
-use crate::domain::stars::Stars;
+use super::{
+    aoc_api::{aoc_client_impl::ResponseStatus, AocApi},
+    cli_display::CliDisplay,
+    configuration::Configuration,
+    find_riddle_part::FindRiddlePart,
+    http_description::HttpDescription,
+    input_cache::FileInputCache,
+    submission_history::SubmissionHistory,
+};
 use crate::domain::{
+    duration_string::DurationString,
     ports::{
         aoc_client::AocClient,
         get_leaderboard::GetLeaderboard,
+        get_private_leaderboard::GetPrivateLeaderboard,
+        get_stars::GetStars,
         input_cache::{InputCache, InputCacheError},
     },
-    RiddlePart,
+    private_leaderboard::PrivateLeaderboard,
+    riddle_part::RiddlePart,
+    stars::Stars,
+    submission::Submission,
+    submission_status::SubmissionStatus,
 };
-use crate::domain::{DurationString, Submission, SubmissionStatus};
 
 #[derive(Debug, Default)]
 pub struct Driver {
@@ -32,7 +38,7 @@ impl Driver {
         Self { configuration }
     }
 
-    pub fn input(&self, year: i32, day: i32) -> Result<String, anyhow::Error> {
+    pub fn input(&self, year: i32, day: i32) -> Result<String> {
         let is_already_released = self.is_input_released_yet(year, day, &chrono::Utc::now())?;
         if !is_already_released {
             anyhow::bail!("The input is not released yet");
@@ -72,7 +78,7 @@ impl Driver {
         day: i32,
         part: RiddlePart,
         answer: String,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<()> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
 
@@ -112,7 +118,6 @@ impl Driver {
                 return Ok(());
             }
         }
-
         let submission_result = aoc_api
             .submit_answer(submission)
             .context("Submitting the result was unsuccessful")?;
@@ -143,14 +148,14 @@ impl Driver {
     /// let driver = Driver::default();
     /// driver.clear_cache();
     /// ```
-    pub fn clear_cache(&self) -> Result<(), anyhow::Error> {
+    pub fn clear_cache(&self) -> Result<()> {
         FileInputCache::clear()?;
         SubmissionHistory::clear()?;
         Ok(())
     }
 
     /// Returns the description of the riddles
-    pub fn get_description(&self, year: i32, day: i32) -> Result<String, anyhow::Error> {
+    pub fn get_description(&self, year: i32, day: i32) -> Result<String> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
@@ -158,8 +163,8 @@ impl Driver {
             .cli_fmt(&self.configuration))
     }
 
-    /// Gets the stars from a specified year
-    pub fn get_stars(&self, year: i32) -> Result<Stars, anyhow::Error> {
+    /// Gets the stars for a specified year
+    pub fn get_stars(&self, year: i32) -> Result<Stars> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api.get_stars(year)?)
@@ -172,7 +177,7 @@ impl Driver {
     /// let driver = Driver::default();
     /// driver.list_app_directories();
     /// ```
-    pub fn list_app_directories(&self) -> Result<HashMap<&str, String>, anyhow::Error> {
+    pub fn list_app_directories(&self) -> Result<HashMap<&str, String>> {
         let mut directories = HashMap::new();
         if let Some(config_dir) = Configuration::get_project_directories()
             .config_dir()
@@ -189,7 +194,8 @@ impl Driver {
         Ok(directories)
     }
 
-    pub fn get_leaderboard(&self, year: i32) -> Result<String, anyhow::Error> {
+    /// Gets the leaderboard for a given year
+    pub fn get_leaderboard(&self, year: i32) -> Result<String> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
         let leaderboard = aoc_client.get_leaderboard(year)?;
@@ -197,20 +203,29 @@ impl Driver {
         Ok(leaderboard.cli_fmt(&self.configuration))
     }
 
-    pub fn get_config_map() -> Result<config::Map<String, config::Value>, anyhow::Error> {
+    pub fn get_private_leaderboard(
+        &self,
+        leaderboard_id: &str,
+        year: i32,
+    ) -> Result<PrivateLeaderboard> {
+        let http_client = AocApi::prepare_http_client(&self.configuration);
+        let aoc_client = AocApi::new(http_client, self.configuration.clone());
+
+        aoc_client
+            .get_private_leaderboard(leaderboard_id, year)
+            .context("Failed to get the private leaderboard")
+    }
+
+    pub fn get_config_map() -> Result<config::Map<String, config::Value>> {
         Ok(Configuration::get_file_configuration_map()?)
     }
 
-    pub fn set_config_key(key: String, value: String) -> Result<(), anyhow::Error> {
+    pub fn set_config_key(key: String, value: String) -> Result<()> {
         Configuration::update_configuration_key(&key, value)?;
         Ok(())
     }
 
-    pub(crate) fn guess_riddle_part(
-        &self,
-        year: i32,
-        day: i32,
-    ) -> Result<RiddlePart, anyhow::Error> {
+    pub(crate) fn guess_riddle_part(&self, year: i32, day: i32) -> Result<RiddlePart> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
 
@@ -222,7 +237,7 @@ impl Driver {
         year: i32,
         day: i32,
         now: &chrono::DateTime<chrono::Utc>,
-    ) -> Result<bool, anyhow::Error> {
+    ) -> Result<bool> {
         let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)
             .unwrap()
             .with_ymd_and_hms(year as i32, 12, day as u32, 0, 0, 0)

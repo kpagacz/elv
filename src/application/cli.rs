@@ -5,19 +5,18 @@ mod cli_interface;
 use std::io::Write;
 use std::path::PathBuf;
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use chrono::Datelike;
 use clap::Parser;
 
-use crate::application::cli::cli_command::CliCommand;
-use crate::application::cli::cli_command::RiddleArgs;
-use crate::application::cli::cli_command::TokenArgs;
-use crate::application::cli::cli_config_subcommand::ConfigSubcommand;
-use crate::application::cli::cli_interface::CliInterface;
-use crate::domain::RiddleDate;
-use crate::domain::RiddlePart;
-use crate::Configuration;
-use crate::Driver;
+use crate::application::cli::{
+    cli_command::{CliCommand, RiddleArgs, TokenArgs},
+    cli_config_subcommand::ConfigSubcommand,
+    cli_interface::CliInterface,
+};
+use crate::domain::{riddle_date::RiddleDate, riddle_part::RiddlePart};
+use crate::infrastructure::cli_display::CliDisplay;
+use crate::{Configuration, Driver};
 
 pub struct ElvCli {}
 
@@ -49,6 +48,11 @@ impl ElvCli {
             CliCommand::Leaderboard { token_args, year } => {
                 handle_get_leaderboard(token_args, year)
             }
+            CliCommand::PrivateLeaderboard {
+                token_args,
+                leaderboard_id,
+                year,
+            } => handle_get_private_leaderboard(token_args, &leaderboard_id, year),
             CliCommand::Stars { year } => handle_get_stars(year),
             CliCommand::ClearCache => handle_clear_cache_command(),
             CliCommand::ListDirs => handle_list_dirs_command(),
@@ -176,6 +180,21 @@ impl ElvCli {
             match driver.get_leaderboard(year.unwrap_or_else(determine_year)) {
                 Ok(text) => println!("{text}"),
                 Err(e) => eprintln!("❌ Error when getting the leaderboards: {}", e.to_string()),
+            }
+        }
+
+        fn handle_get_private_leaderboard(
+            token_args: TokenArgs,
+            leaderboard_id: &str,
+            year: Option<i32>,
+        ) {
+            let driver = get_driver(Some(token_args), None);
+            let year = year.unwrap_or_else(|| determine_year());
+            match driver.get_private_leaderboard(leaderboard_id, year) {
+                Ok(private_leaderboard) => {
+                    println!("{}", private_leaderboard.cli_fmt(&driver.configuration))
+                }
+                Err(e) => eprintln!("❌ {:?}", e),
             }
         }
 

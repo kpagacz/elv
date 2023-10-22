@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Args;
 
+use crate::domain::riddle_part::RiddlePart;
+
 use super::cli_config_subcommand::ConfigSubcommand;
 
 #[derive(Debug, Args)]
@@ -101,7 +103,7 @@ pub enum CliCommand {
         /// The part of the challenge
         ///
         /// Possible values: "one", "two".
-        part: Option<crate::domain::RiddlePart>,
+        part: Option<RiddlePart>,
 
         #[command(flatten)]
         riddle_args: RiddleArgs,
@@ -117,6 +119,29 @@ pub enum CliCommand {
     Leaderboard {
         #[command(flatten)]
         token_args: TokenArgs,
+
+        /// The year of the challenge
+        ///
+        /// If you do not supply a year, this command will pull the leaderboards from
+        /// the latest event.
+        #[arg(short, long, value_parser = clap::value_parser!(i32))]
+        year: Option<i32>,
+    },
+
+    /// 🥇 Show a private leaderboard
+    ///
+    /// This command downloads the leaderboard rankings for a particular year.
+    #[command(visible_aliases = ["pl"])]
+    PrivateLeaderboard {
+        #[command(flatten)]
+        token_args: TokenArgs,
+
+        /// The ID of the leaderboard
+        ///
+        /// The ID of the leaderboard is the part of the last part of the URL of
+        /// the leaderboard you want to visit.
+        #[arg(short, long, visible_aliases = ["id"])]
+        leaderboard_id: String,
 
         /// The year of the challenge
         ///

@@ -271,9 +271,9 @@ elv stars <YEAR> # prints the stars for the given year
 elv stars 2019 # prints the stars for the year 2019
 ```
 
-### Getting the leaderboard
+### Getting a leaderboard
 
-#### Getting the leaderboard for this year
+#### Getting the global leaderboard for this year
 
 This works only while the event is being held, not all the time of the
 year. While the event is not held, you need to specify the year
@@ -283,12 +283,35 @@ explicitly using `-y` parameter.
 elv leaderboard
 ```
 
-#### Getting the leaderboard for a particular year
+#### Getting the global leaderboard for a particular year
 
 You specify the year of the leaderboard.
 
 ```console
 elv leaderboard -y 2021
+```
+
+#### Getting a private leaderboard for this year
+
+This works only while the event is being held, not all the time of the
+year. While the event is not held, you need to specify the year
+explicitly using `-y` parameter.
+
+```console
+elv private-leaderboard --id <LEADERBOARD ID>
+elv pl --id <LEADERBOARD ID>
+```
+
+The private leaderboard command also has an alias `pl` that you can use instead
+of writing `private-leaderboard`.
+
+##### Getting a private leaderboard for a particular year
+
+You specify the year of the leaderboard.
+
+```console
+elv private-leaderboard -y 2021 --id <LEADERBOARD ID>
+elv pl -y 2021 --id <LEADERBOARD ID>
 ```
 
 ### Guessing the year and the day of the riddle

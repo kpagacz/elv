@@ -1,4 +1,4 @@
-use super::RiddlePart;
+use super::riddle_part::RiddlePart;
 
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Submission {

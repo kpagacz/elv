@@ -1,5 +1,5 @@
 mod application;
-pub mod domain;
+mod domain;
 mod infrastructure;
 
 pub use crate::application::cli::ElvCli;

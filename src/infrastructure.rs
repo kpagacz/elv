@@ -5,4 +5,5 @@ pub mod driver;
 mod find_riddle_part;
 pub(crate) mod http_description;
 pub(crate) mod input_cache;
+mod private_leaderboard;
 pub(crate) mod submission_history;
