@@ -177,7 +177,9 @@ Once you get your session token, we recommend to set it in `elv`'s
 configuration. You can do it by running:
 
 ```console
-elv config set aoc.token <your-session-token>
+elv token <your-session-token>
+# or
+elv t <your-session-token>
 ```
 
 See the [section about storing the session key](#how-can-i-store-the-session-token)
@@ -371,6 +373,8 @@ ways, the most convenient being:
 1. Set it in the configuration using the CLI:
 
     ```console
+    elv token 01234567890123456789abcdefghi
+    elv t 01234567890123456789abcdefghi
     elv config set aoc.token 01234567890123456789abcdefghi
     ```
 

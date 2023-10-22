@@ -220,8 +220,8 @@ impl Driver {
         Ok(Configuration::get_file_configuration_map()?)
     }
 
-    pub fn set_config_key(key: String, value: String) -> Result<()> {
-        Configuration::update_configuration_key(&key, value)?;
+    pub fn set_config_key(key: &str, value: String) -> Result<()> {
+        Configuration::update_configuration_key(key, value)?;
         Ok(())
     }
 
