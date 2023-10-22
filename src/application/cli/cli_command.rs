@@ -128,6 +128,29 @@ pub enum CliCommand {
         year: Option<i32>,
     },
 
+    /// 🥇 Show a private leaderboard
+    ///
+    /// This command downloads the leaderboard rankings for a particular year.
+    #[command(visible_aliases = ["pl"])]
+    PrivateLeaderboard {
+        #[command(flatten)]
+        token_args: TokenArgs,
+
+        /// The ID of the leaderboard
+        ///
+        /// The ID of the leaderboard is the part of the last part of the URL of
+        /// the leaderboard you want to visit.
+        #[arg(short, long, visible_aliases = ["id"])]
+        leaderboard_id: String,
+
+        /// The year of the challenge
+        ///
+        /// If you do not supply a year, this command will pull the leaderboards from
+        /// the latest event.
+        #[arg(short, long, value_parser = clap::value_parser!(i32))]
+        year: Option<i32>,
+    },
+
     /// ⭐ Show the stars page
     ///
     /// This command downloads the star page and displays the ASCII pattern along with

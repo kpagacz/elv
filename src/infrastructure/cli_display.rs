@@ -28,7 +28,7 @@ impl CliDisplay for PrivateLeaderboard {
             solved_status
                 .iter()
                 .map(|status| match status {
-                    SolvedParts::None => "*".truecolor(0x69, 0x69, 0x69),
+                    SolvedParts::None => "*".dimmed(),
                     SolvedParts::One => "*".white(),
                     SolvedParts::Both => "*".yellow(),
                 })
@@ -36,11 +36,14 @@ impl CliDisplay for PrivateLeaderboard {
                     format!("{}{}", acc, coloured_string)
                 })
         }
-        let out = std::iter::zip(1..=self.entries.len(), self.entries.iter())
+        let out = self
+            .entries
+            .iter()
+            .enumerate()
             .map(|(rank, entry)| {
                 format!(
                     "{}){:>4} {}  {}",
-                    rank,
+                    rank + 1,
                     entry.points,
                     stars(&entry.stars),
                     entry.user
@@ -109,6 +112,6 @@ mod tests {
             ],
         };
 
-        assert_eq!("                111\n       123456789012\n1)   1 \u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[38;2;105;105;105m*\u{1b}[0m\u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[38;2;105;105;105m*\u{1b}[0m\u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[38;2;105;105;105m*\u{1b}[0m\u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[38;2;105;105;105m*\u{1b}[0m  user 1\n2)9999 \u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m  user with a very long name", leaderboard.cli_fmt(&Configuration::new()));
+        assert_eq!("                111\n       123456789012\n1)   1 \u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[2m*\u{1b}[0m\u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[2m*\u{1b}[0m\u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[2m*\u{1b}[0m\u{1b}[37m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[2m*\u{1b}[0m  user 1\n2)9999 \u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m\u{1b}[33m*\u{1b}[0m  user with a very long name", leaderboard.cli_fmt(&Configuration::new()));
     }
 }
