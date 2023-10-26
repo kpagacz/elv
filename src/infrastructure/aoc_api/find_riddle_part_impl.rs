@@ -4,7 +4,7 @@ use crate::infrastructure::{find_riddle_part::FindRiddlePart, http_description::
 use super::AocApi;
 
 impl FindRiddlePart for AocApi {
-    fn find_unsolved_part(&self, year: i32, day: i32) -> Result<RiddlePart, anyhow::Error> {
+    fn find_unsolved_part(&self, year: usize, day: usize) -> Result<RiddlePart, anyhow::Error> {
         let description = Self::get_description::<HttpDescription>(&self, year, day)?;
         match (description.part_one_answer(), description.part_two_answer()) {
             (None, _) => Ok(RiddlePart::One),

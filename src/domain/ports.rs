@@ -4,3 +4,4 @@ pub(crate) mod get_leaderboard;
 pub(crate) mod get_private_leaderboard;
 pub(crate) mod get_stars;
 pub(crate) mod input_cache;
+pub(crate) mod get_input;

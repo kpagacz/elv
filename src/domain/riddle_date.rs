@@ -6,18 +6,18 @@ pub enum RiddleDateError {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct RiddleDate {
-    pub year: i32,
-    pub day: i32,
+    pub year: usize,
+    pub day: usize,
 }
 
 impl RiddleDate {
-    pub fn new(year: i32, day: i32) -> Self {
+    pub fn new(year: usize, day: usize) -> Self {
         RiddleDate { year, day }
     }
 
     pub fn best_guess<Date: chrono::Datelike>(
-        year: Option<i32>,
-        day: Option<i32>,
+        year: Option<usize>,
+        day: Option<usize>,
         current_date: Date,
     ) -> Result<Self, RiddleDateError> {
         match (year, day) {
@@ -32,20 +32,23 @@ impl RiddleDate {
         current_date: Date,
     ) -> Result<Self, RiddleDateError> {
         if current_date.month() == 12 && current_date.day() <= 25 {
-            Ok(Self::new(current_date.year(), current_date.day() as i32))
+            Ok(Self::new(
+                current_date.year() as usize,
+                current_date.day() as usize,
+            ))
         } else {
             Err(RiddleDateError::GuessError)
         }
     }
 
     fn guess_from_day<Date: chrono::Datelike>(
-        day: i32,
+        day: usize,
         current_date: Date,
     ) -> Result<Self, RiddleDateError> {
         if current_date.month() == 12 {
-            Ok(Self::new(current_date.year(), day))
+            Ok(Self::new(current_date.year() as usize, day))
         } else {
-            Ok(Self::new(current_date.year() - 1, day))
+            Ok(Self::new(current_date.year() as usize - 1, day))
         }
     }
 }
