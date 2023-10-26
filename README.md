@@ -33,6 +33,8 @@ instead of the webpage. So far `elv` supports:
 - guessing the year and day of a riddle based on the current date
 - caching `AoC` responses whenever possible, so you minimize your
   footprint on `AoC`'s servers
+- two functions that let you use `elv` as a library in your own
+  `Rust`-based application or code
 
 ## Installation
 
@@ -157,6 +159,29 @@ Delete the binary from your system.
 brew uninstall kpagacz/elv/elv
 brew autoremove
 ```
+
+## Library
+
+`elv` exposes a supremely small library that you can use in your scripts or
+applications. These include:
+* `elv::get_input` - a function that downloads the input for a given year and day
+* `elv::submit` - a function that submits the solution to a given year and day
+
+These functions have decent documentation that you can browse
+[here](https://docs.rs/elv/latest/elv/). Here is a small example from the docs:
+
+```rust
+// Will succeed if your token is set using another way
+get_input(1, 2023, None).unwrap()
+submit(20, 2019, "something", 2, Some("Mytoken")).unwrap();
+```
+
+You can also use the `Driver` object to perform even more actions, but
+this is not recommended as the API is not stable and may change in the
+future. The `Driver` struct is also poorly documented.
+
+Let me know at `konrad.pagacz@gmail.com` or file an issue
+if you want to get more functions exposed in the library.
 
 ## Examples
 
