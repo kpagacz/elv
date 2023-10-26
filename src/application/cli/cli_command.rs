@@ -13,16 +13,16 @@ pub struct RiddleArgs {
     /// If you do not supply a year and a day, the current year will be used.
     /// If you do not supply a year, but supply a day, the previous year
     /// will be used.
-    #[arg(short, long, value_parser = clap::value_parser!(i32))]
-    pub year: Option<i32>,
+    #[arg(short, long, value_parser = clap::value_parser!(usize))]
+    pub year: Option<usize>,
 
     /// The day of the challenge
     ///
     /// If you do not supply a day, the current day of the month will be used
     /// (if the current month is December). If the current month is not December,
     /// the application will not be able to guess the day.
-    #[arg(short, long, value_parser = clap::value_parser!(i32))]
-    pub day: Option<i32>,
+    #[arg(short, long, value_parser = clap::value_parser!(usize))]
+    pub day: Option<usize>,
 }
 
 #[derive(Debug, Args)]
@@ -200,6 +200,6 @@ pub enum CliCommand {
     #[command(verbatim_doc_comment, visible_aliases = ["t", "sett", "set-token"])]
     Token {
         /// Token to be saved
-        token: Option<String>
-    }
+        token: Option<String>,
+    },
 }

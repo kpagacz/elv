@@ -4,18 +4,15 @@ use anyhow::{Context, Result};
 use chrono::TimeZone;
 
 use super::{
-    aoc_api::{aoc_client_impl::ResponseStatus, AocApi},
-    cli_display::CliDisplay,
-    configuration::Configuration,
-    find_riddle_part::FindRiddlePart,
-    http_description::HttpDescription,
-    input_cache::FileInputCache,
-    submission_history::SubmissionHistory,
+    aoc_api::AocApi, cli_display::CliDisplay, configuration::Configuration,
+    find_riddle_part::FindRiddlePart, http_description::HttpDescription,
+    input_cache::FileInputCache, submission_history::SubmissionHistory,
 };
 use crate::domain::{
     duration_string::DurationString,
     ports::{
         aoc_client::AocClient,
+        get_input::GetInput,
         get_leaderboard::GetLeaderboard,
         get_private_leaderboard::GetPrivateLeaderboard,
         get_stars::GetStars,
@@ -38,7 +35,7 @@ impl Driver {
         Self { configuration }
     }
 
-    pub fn input(&self, year: i32, day: i32) -> Result<String> {
+    pub fn input(&self, year: usize, day: usize) -> Result<String> {
         let is_already_released = self.is_input_released_yet(year, day, &chrono::Utc::now())?;
         if !is_already_released {
             anyhow::bail!("The input is not released yet");
@@ -47,43 +44,32 @@ impl Driver {
         match FileInputCache::load(year, day) {
             Ok(input) => return Ok(input),
             Err(e) => match e {
-                InputCacheError::Empty(_) => {
-                    eprintln!("Attempting to download it from the server...");
-                }
                 InputCacheError::Load(_) => {
-                    eprintln!("Cache corrupted. Clear the cache and try again.");
+                    eprintln!("Cache corrupted. Clearing the cache...");
+                    let _ = self.clear_cache().context("Failed to clear the cache")?;
                 }
                 _ => {
-                    eprintln!("Failed to load the input from the cache: {}", e);
+                    eprintln!("Downloading the input from the server...");
                 }
             },
         };
 
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
-        let input = aoc_api.get_input(year, day);
-        if input.status == ResponseStatus::Ok {
-            if FileInputCache::save(&input.body, year, day).is_err() {
-                eprintln!("Failed saving the input to the cache");
-            }
-        } else {
-            anyhow::bail!("{}", input.body);
-        }
-        Ok(input.body)
+        aoc_api.get_input(day, year)
     }
 
     pub fn submit_answer(
         &self,
-        year: i32,
-        day: i32,
+        year: usize,
+        day: usize,
         part: RiddlePart,
         answer: String,
     ) -> Result<()> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
 
-        let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(&year, &day)
-        {
+        let mut cache: Option<SubmissionHistory> = match SubmissionHistory::from_cache(year, day) {
             Ok(c) => Some(c),
             Err(e) => {
                 eprintln!("Error: {}", e);
@@ -141,13 +127,6 @@ impl Driver {
     }
 
     /// Clears the cache of the application
-    ///
-    /// # Example
-    /// ```
-    /// use elv::Driver;
-    /// let driver = Driver::default();
-    /// driver.clear_cache();
-    /// ```
     pub fn clear_cache(&self) -> Result<()> {
         FileInputCache::clear()?;
         SubmissionHistory::clear()?;
@@ -155,7 +134,7 @@ impl Driver {
     }
 
     /// Returns the description of the riddles
-    pub fn get_description(&self, year: i32, day: i32) -> Result<String> {
+    pub fn get_description(&self, year: usize, day: usize) -> Result<String> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
@@ -171,12 +150,6 @@ impl Driver {
     }
 
     /// Lists the directories used by the application
-    /// # Example
-    /// ```
-    /// use elv::Driver;
-    /// let driver = Driver::default();
-    /// driver.list_app_directories();
-    /// ```
     pub fn list_app_directories(&self) -> Result<HashMap<&str, String>> {
         let mut directories = HashMap::new();
         if let Some(config_dir) = Configuration::get_project_directories()
@@ -225,7 +198,7 @@ impl Driver {
         Ok(())
     }
 
-    pub(crate) fn guess_riddle_part(&self, year: i32, day: i32) -> Result<RiddlePart> {
+    pub(crate) fn guess_riddle_part(&self, year: usize, day: usize) -> Result<RiddlePart> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_client = AocApi::new(http_client, self.configuration.clone());
 
@@ -234,8 +207,8 @@ impl Driver {
 
     fn is_input_released_yet(
         &self,
-        year: i32,
-        day: i32,
+        year: usize,
+        day: usize,
         now: &chrono::DateTime<chrono::Utc>,
     ) -> Result<bool> {
         let input_release_time = match chrono::FixedOffset::west_opt(60 * 60 * 5)

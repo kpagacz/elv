@@ -4,7 +4,7 @@ use crate::domain::ports::input_cache::{InputCache, InputCacheError};
 pub struct FileInputCache;
 
 impl FileInputCache {
-    fn cache_path(year: i32, day: i32) -> std::path::PathBuf {
+    fn cache_path(year: usize, day: usize) -> std::path::PathBuf {
         Configuration::get_project_directories()
             .cache_dir()
             .join("inputs")
@@ -19,7 +19,7 @@ impl From<std::io::Error> for InputCacheError {
 }
 
 impl InputCache for FileInputCache {
-    fn save(input: &str, year: i32, day: i32) -> Result<(), InputCacheError> {
+    fn save(input: &str, year: usize, day: usize) -> Result<(), InputCacheError> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
             std::fs::create_dir_all(cache_path.parent().unwrap())?;
@@ -28,7 +28,7 @@ impl InputCache for FileInputCache {
         Ok(())
     }
 
-    fn load(year: i32, day: i32) -> Result<String, InputCacheError> {
+    fn load(year: usize, day: usize) -> Result<String, InputCacheError> {
         let cache_path = Self::cache_path(year, day);
         if !cache_path.exists() {
             return Err(InputCacheError::Empty(format!(

@@ -234,7 +234,7 @@ impl ElvCli {
             }
         }
 
-        fn determine_date(riddle_args: RiddleArgs) -> Result<(i32, i32), anyhow::Error> {
+        fn determine_date(riddle_args: RiddleArgs) -> Result<(usize, usize)> {
             let est_now = chrono::Utc::now() - chrono::Duration::hours(4);
             let best_guess_date =
                 RiddleDate::best_guess(riddle_args.year, riddle_args.day, est_now)?;

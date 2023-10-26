@@ -10,45 +10,6 @@ use reqwest::header::{CONTENT_TYPE, ORIGIN};
 use std::io::Read;
 
 impl AocClient for AocApi {
-    fn get_input(&self, year: i32, day: i32) -> InputResponse {
-        let url = match reqwest::Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)) {
-            Ok(url) => url,
-            Err(_) => {
-                return InputResponse::new(
-                    "Failed to parse the URL. Are you sure your day and year are correct?"
-                        .to_string(),
-                    ResponseStatus::Error,
-                )
-            }
-        };
-        let mut response = match self.http_client.get(url).send() {
-            Ok(response) => response,
-            Err(_) => {
-                return InputResponse::new("Failed to get input".to_string(), ResponseStatus::Error)
-            }
-        };
-        if response.status() != reqwest::StatusCode::OK {
-            return InputResponse::new(
-                "Got a non-200 status code from the server. Is your token up to date?".to_owned(),
-                ResponseStatus::Error,
-            );
-        }
-        let mut body = String::new();
-        if response.read_to_string(&mut body).is_err() {
-            return InputResponse::new(
-                "Failed to read the response body".to_owned(),
-                ResponseStatus::Error,
-            );
-        }
-        if body.starts_with("Please don't repeatedly request this") {
-            return InputResponse::new(
-                "You have to wait for the input to be available".to_owned(),
-                ResponseStatus::TooSoon,
-            );
-        }
-        InputResponse::new(body, ResponseStatus::Ok)
-    }
-
     fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult, AocClientError> {
         let url = reqwest::Url::parse(&format!(
             "{}/{}/day/{}/answer",
@@ -118,8 +79,8 @@ impl AocClient for AocApi {
     /// for a given day and year and returns it as a formatted string.
     fn get_description<HttpDescription: std::convert::TryFrom<reqwest::blocking::Response>>(
         &self,
-        year: i32,
-        day: i32,
+        year: usize,
+        day: usize,
     ) -> Result<HttpDescription, AocClientError> {
         let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))?;
         self.http_client
@@ -127,25 +88,6 @@ impl AocClient for AocApi {
             .send()?
             .try_into()
             .map_err(|_e| AocClientError::GetDescriptionError)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum ResponseStatus {
-    Ok,
-    TooSoon,
-    Error,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct InputResponse {
-    pub body: String,
-    pub status: ResponseStatus,
-}
-
-impl InputResponse {
-    pub fn new(body: String, status: ResponseStatus) -> Self {
-        Self { body, status }
     }
 }
 
