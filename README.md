@@ -8,10 +8,11 @@ test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch
 1.  [Introduction](#introduction)
 2.  [Installation](#installation)
 3.  [Uninstallation](#uninstallation)
-4.  [Examples](#examples)
-5.  [FAQ](#faq)
-6.  [Configuration](#configuration)
-7.  [Get Help](#help)
+4.  [Library](#library)
+5.  [Examples](#examples)
+6.  [FAQ](#faq)
+7.  [Configuration](#configuration)
+8.  [Get Help](#help)
 
 ## Introduction
 
