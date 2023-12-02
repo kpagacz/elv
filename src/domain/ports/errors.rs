@@ -24,9 +24,6 @@ pub enum AocClientError {
 
     #[error("Network error")]
     NetworkError(#[from] reqwest::Error),
-
-    #[error("Failed to get stars page")]
-    GetStarsError,
 }
 
 impl From<LeaderboardError> for AocClientError {

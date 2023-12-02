@@ -1,5 +1,5 @@
-use super::{super::stars::Stars, errors::AocClientError};
+use super::super::stars::Stars;
 
 pub trait GetStars {
-    fn get_stars(&self, year: i32) -> Result<Stars, AocClientError>;
+    fn get_stars(&self, year: i32) -> anyhow::Result<Stars>;
 }
