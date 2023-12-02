@@ -1,16 +1,21 @@
+use anyhow::Context;
+
 use super::AOC_URL;
-use crate::domain::{
-    ports::{errors::AocClientError, get_stars::GetStars},
-    solved_parts::SolvedParts,
-    stars::Stars,
-};
+use crate::domain::{ports::get_stars::GetStars, solved_parts::SolvedParts, stars::Stars};
 
 use super::AocApi;
 
 impl GetStars for AocApi {
-    fn get_stars(&self, year: i32) -> Result<Stars, AocClientError> {
-        let url = reqwest::Url::parse(&format!("{}/{}", AOC_URL, year))?;
-        Stars::from_readable(self.http_client.get(url).send()?.error_for_status()?)
+    fn get_stars(&self, year: i32) -> anyhow::Result<Stars> {
+        let url = reqwest::Url::parse(&format!("{}/{}", AOC_URL, year))
+            .expect("Creating a static URL should not fail");
+        Stars::from_readable(
+            self.http_client
+                .get(url)
+                .send()?
+                .error_for_status()
+                .context("GET request for the stars page failed")?,
+        )
     }
 }
 
@@ -20,21 +25,25 @@ impl GetStars for AocApi {
 // of this trait in the standard library which conflicts
 // with the one above. So this is one workaround...
 impl Stars {
-    pub fn from_readable<T: std::io::Read>(mut readable: T) -> Result<Stars, AocClientError> {
+    pub fn from_readable<T: std::io::Read>(mut readable: T) -> anyhow::Result<Stars> {
         let mut body = String::new();
         readable
             .read_to_string(&mut body)
-            .map_err(|_| AocClientError::GetStarsError)?;
+            .context("Reading the stars page response body to string failed")?;
 
-        parse_http_response(body)
+        parse_http_response(body).context("Parsing the stars page body to stars failed")
     }
 }
 
-fn parse_http_response(calendar_http_body: String) -> Result<Stars, AocClientError> {
+fn parse_http_response(calendar_http_body: String) -> anyhow::Result<Stars> {
     let document = scraper::Html::parse_document(&calendar_http_body);
-    let calendar_entries_selector =
-        scraper::Selector::parse("[class^='calendar-day']:not(.calendar-day)").unwrap();
-    let solved_parts = document
+    let calendar_entries_selector = scraper::Selector::parse(
+        "pre[class=\"calendar\"] > span, \
+        pre[class=\"calendar\"] > a, pre[class=\"calendar calendar-perfect\"] > span, \
+        pre[class=\"calendar calendar-perfect\"] > a",
+    )
+    .expect("Parsing a static CSS selector should not fail");
+    let solved_statuses = document
         .select(&calendar_entries_selector)
         .map(|day| {
             match (
@@ -55,25 +64,37 @@ fn parse_http_response(calendar_http_body: String) -> Result<Stars, AocClientErr
         .select(&calendar_entries_selector)
         .collect::<Vec<_>>();
 
-    let entries_without_stars = std::iter::zip(solved_parts.clone(), calendar_entries)
+    let ascii_art = std::iter::zip(&solved_statuses, calendar_entries)
         .map(|(solved_part, entry)| {
-            let text = entry.text().collect::<Vec<_>>();
+            let text: Vec<_> = entry
+                .children()
+                .filter_map(|node| match node.value() {
+                    scraper::Node::Text(text) => Some(String::from(&text[..])),
+                    scraper::Node::Element(el) => {
+                        if el.name() != "script" {
+                            let el_ref = scraper::ElementRef::wrap(node).unwrap();
+                            Some(el_ref.text().collect::<Vec<_>>().join(""))
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                })
+                .collect();
             Ok(match solved_part {
                 SolvedParts::Both => text.join(""),
                 SolvedParts::One => text
                     .join("")
                     .strip_suffix("*")
-                    .ok_or_else(|| AocClientError::GetStarsError)?
-                    .to_owned(),
+                    .map_or_else(|| text.join(""), |stripped| String::from(stripped)),
                 SolvedParts::None => text
                     .join("")
                     .strip_suffix("**")
-                    .ok_or_else(|| AocClientError::GetStarsError)?
-                    .to_owned(),
+                    .map_or_else(|| text.join(""), |stripped| String::from(stripped)),
             })
         })
-        .collect::<Result<Vec<String>, AocClientError>>()?;
-    Ok(Stars::new(solved_parts, entries_without_stars))
+        .collect::<anyhow::Result<Vec<String>>>()?;
+    Ok(Stars::new(solved_statuses, ascii_art))
 }
 
 #[cfg(test)]

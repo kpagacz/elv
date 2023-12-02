@@ -203,7 +203,7 @@ impl ElvCli {
             let driver = get_driver(None, None);
             match driver.get_stars(year.unwrap_or_else(determine_year)) {
                 Ok(stars) => println!("{}", stars),
-                Err(e) => eprintln!("❌ Failure: {}", e.to_string()),
+                Err(e) => eprintln!("❌ Failure: {:#}", e),
             }
         }
 
