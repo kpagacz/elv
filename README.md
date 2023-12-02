@@ -1,7 +1,11 @@
 [![Build and
 test](https://github.com/kpagacz/elv/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/kpagacz/elv/actions/workflows/rust.yml)
 
-# Elv
+# elv - Advent of Code CLI
+
+<p align="center">
+  <img src="./docs/demo.gif">
+</p>
 
 ## Table of Contents:
 
