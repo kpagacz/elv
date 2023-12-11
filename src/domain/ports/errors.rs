@@ -7,9 +7,6 @@ pub enum AocClientError {
     #[error("Failed to get the leaderboard")]
     GetLeaderboardError,
 
-    #[error("Failed to get the description")]
-    GetDescriptionError,
-
     #[error("Failed to submit the answer: {}", 0)]
     SubmitAnswerError(String),
 

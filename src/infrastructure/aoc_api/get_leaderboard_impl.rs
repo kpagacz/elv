@@ -37,7 +37,7 @@ impl AocApi {
                     .collect::<Vec<_>>()
                     .join("")
                     .trim()
-                    .trim_end_matches(")")
+                    .trim_end_matches(')')
                     .to_owned();
                 if position.is_empty() {
                     position = id.to_string();

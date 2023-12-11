@@ -52,8 +52,8 @@ mod tests {
         let leaderboard = leaderboard.unwrap();
         assert_eq!(leaderboard.entries.len(), 4);
 
-        assert!(leaderboard.entries.first().unwrap().user == String::from("Konrad Pagacz"));
-        assert!(leaderboard.entries.last().unwrap().user == String::from("Anna Pytel"));
+        assert!(leaderboard.entries.first().unwrap().user == *"Konrad Pagacz");
+        assert!(leaderboard.entries.last().unwrap().user == *"Anna Pytel");
         assert!(leaderboard.entries.first().unwrap().points == 187)
     }
 }

@@ -13,6 +13,6 @@ impl Stars {
 
 impl core::fmt::Display for Stars {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\n", self.pattern.join("\n").to_string())
+        writeln!(f, "{}", self.pattern.join("\n"))
     }
 }

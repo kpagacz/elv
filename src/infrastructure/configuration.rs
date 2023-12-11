@@ -32,13 +32,13 @@ impl Default for CliConfiguration {
 #[derive(thiserror::Error, Debug)]
 pub enum ConfigurationError {
     #[error("Cannot create a configuration file")]
-    CreateError(#[from] std::io::Error),
+    Create(#[from] std::io::Error),
     #[error("Cannot serialize the configuration to toml format")]
-    SerializationError(#[from] toml::ser::Error),
+    Serialization(#[from] toml::ser::Error),
     #[error("Cannot update the configuration value")]
-    UpdateError,
+    Update,
     #[error("Cannot build the configuration")]
-    BuildError(#[from] config::ConfigError),
+    Build(#[from] config::ConfigError),
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default)]
@@ -108,7 +108,7 @@ impl Configuration {
         let mut file_config = Self::builder_from_config_file()?;
         file_config = file_config
             .set_override(key, value)
-            .map_err(|_| ConfigurationError::UpdateError)?;
+            .map_err(|_| ConfigurationError::Update)?;
 
         file_config
             .build()?

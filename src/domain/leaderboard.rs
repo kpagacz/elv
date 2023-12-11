@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn try_from_string_vec_for_leaderboard() {
-        let entries: Vec<String> = vec!["1) 3693  betaveros", "2) 14 me"]
+        let entries: Vec<String> = ["1) 3693  betaveros", "2) 14 me"]
             .iter()
             .map(|&x| x.to_owned())
             .collect();
