@@ -1,4 +1,5 @@
 use crate::{domain::description::Description, Configuration};
+use anyhow::Result;
 
 use super::cli_display::CliDisplay;
 
@@ -46,9 +47,7 @@ impl HttpDescription {
 impl TryFrom<reqwest::blocking::Response> for HttpDescription {
     type Error = anyhow::Error;
 
-    fn try_from(
-        http_response: reqwest::blocking::Response,
-    ) -> Result<HttpDescription, anyhow::Error> {
+    fn try_from(http_response: reqwest::blocking::Response) -> Result<HttpDescription> {
         if !http_response.status().is_success() {
             anyhow::bail!("AoC server responded with an error".to_owned());
         }

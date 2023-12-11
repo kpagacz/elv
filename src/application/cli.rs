@@ -122,9 +122,9 @@ impl ElvCli {
                             }
                         }
 
-                        let mut file = std::fs::File::create(&out).expect(
-                        format!("Failed to create the file `{}`\nYou can still get the input if you print it with the --print flag",
-                        out.to_str().unwrap()).as_str()
+                        let mut file = std::fs::File::create(&out).unwrap_or_else(|_|
+                        panic!("Failed to create the file `{}`\nYou can still get the input if you print it with the --print flag",
+                        out.to_str().unwrap())
                     );
 
                         match file.write_all(input.as_bytes()) {

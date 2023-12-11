@@ -25,7 +25,7 @@ impl TryFrom<&str> for LeaderboardEntry {
     fn try_from(value: &str) -> Result<Self, LeaderboardEntryError> {
         let values: Vec<&str> = value.split_whitespace().collect();
         let (entry_position, entry_points, entry_username);
-        entry_position = values.get(0).ok_or(LeaderboardEntryError::Position)?;
+        entry_position = values.first().ok_or(LeaderboardEntryError::Position)?;
         entry_points = values.get(1).ok_or(LeaderboardEntryError::Points)?;
         entry_username = values
             .iter()
@@ -36,7 +36,7 @@ impl TryFrom<&str> for LeaderboardEntry {
 
         Ok(Self {
             position: entry_position
-                .replace(r")", "")
+                .replace(')', "")
                 .parse()
                 .map_err(|_| LeaderboardEntryError::Parsing("position".to_owned()))?,
             points: entry_points

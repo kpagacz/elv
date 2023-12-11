@@ -85,12 +85,12 @@ fn parse_http_response(calendar_http_body: String) -> anyhow::Result<Stars> {
                 SolvedParts::Both => text.join(""),
                 SolvedParts::One => text
                     .join("")
-                    .strip_suffix("*")
-                    .map_or_else(|| text.join(""), |stripped| String::from(stripped)),
+                    .strip_suffix('*')
+                    .map_or_else(|| text.join(""), String::from),
                 SolvedParts::None => text
                     .join("")
                     .strip_suffix("**")
-                    .map_or_else(|| text.join(""), |stripped| String::from(stripped)),
+                    .map_or_else(|| text.join(""), String::from),
             })
         })
         .collect::<anyhow::Result<Vec<String>>>()?;
@@ -217,11 +217,11 @@ mod tests {
     #[test]
     fn testing_stars() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        d.push(format!("tests/resources/stars-page-full-stars.html"));
+        d.push(String::from("tests/resources/stars-page-full-stars.html"));
         let f = File::open(d).unwrap();
         let file_buf = BufReader::new(f);
         let stars: Stars = Stars::from_readable(file_buf).unwrap();
-        let expected = r#"
+        let expected = r"
   - /\ -  -        -       -     -      -    -
  - /  \/\  -    -     -  -    -   -  /\   -     -
  /\    \ \-  - -   -   -    - -  -/\/  \-   -  -   25 **
@@ -249,9 +249,9 @@ mod tests {
 @#@@#@@@#_/ ~   ~  \ ' '. '.'.@@@@  /  \  \  #@@@   3 **
 -~------'    ~    ~ '--~-----~-~----___________--   2 **
   ~    ~  ~      ~     ~ ~   ~     ~  ~  ~   ~      1 **
-"#
+"
         .to_owned();
-        std::iter::zip(expected.split("\n"), format!("\n{}", stars).split("\n")).for_each(
+        std::iter::zip(expected.split('\n'), format!("\n{}", stars).split('\n')).for_each(
             |(expected, result)| {
                 assert_eq!(expected, result.trim_end());
             },

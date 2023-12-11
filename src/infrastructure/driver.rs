@@ -5,8 +5,8 @@ use chrono::TimeZone;
 
 use super::{
     aoc_api::AocApi, cli_display::CliDisplay, configuration::Configuration,
-    find_riddle_part::FindRiddlePart, http_description::HttpDescription,
-    input_cache::FileInputCache, submission_history::SubmissionHistory,
+    find_riddle_part::FindRiddlePart, input_cache::FileInputCache,
+    submission_history::SubmissionHistory,
 };
 use crate::domain::{
     duration_string::DurationString,
@@ -46,7 +46,7 @@ impl Driver {
             Err(e) => match e {
                 InputCacheError::Load(_) => {
                     eprintln!("Cache corrupted. Clearing the cache...");
-                    let _ = self.clear_cache().context("Failed to clear the cache")?;
+                    self.clear_cache().context("Failed to clear the cache")?;
                 }
                 _ => {
                     eprintln!("Downloading the input from the server...");
@@ -138,7 +138,7 @@ impl Driver {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
         Ok(aoc_api
-            .get_description::<HttpDescription>(year, day)?
+            .get_description(year, day)?
             .cli_fmt(&self.configuration))
     }
 
@@ -146,7 +146,7 @@ impl Driver {
     pub fn get_stars(&self, year: i32) -> Result<Stars> {
         let http_client = AocApi::prepare_http_client(&self.configuration);
         let aoc_api = AocApi::new(http_client, self.configuration.clone());
-        Ok(aoc_api.get_stars(year)?)
+        aoc_api.get_stars(year)
     }
 
     /// Lists the directories used by the application

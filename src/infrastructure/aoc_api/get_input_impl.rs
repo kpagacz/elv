@@ -19,9 +19,9 @@ impl GetInput for AocApi {
                 "Failed to send the request to the AOC server. Is your internet connection OK?",
             )
             .and_then(|response| {
-                response.error_for_status().context(format!(
-                    "Got a non-200 response from a server. Is your token up to date?",
-                ))
+                response
+                    .error_for_status()
+                    .context("Got a non-200 response from a server. Is your token up to date?")
             })
             .and_then(|mut ok_response| {
                 let mut body = String::new();

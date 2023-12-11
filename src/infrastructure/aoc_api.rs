@@ -1,4 +1,5 @@
 use super::configuration::Configuration;
+use anyhow::Result;
 
 const AOC_URL: &str = "https://adventofcode.com";
 
@@ -6,6 +7,7 @@ const AOC_URL: &str = "https://adventofcode.com";
 pub struct AocApi {
     http_client: reqwest::blocking::Client,
     configuration: Configuration,
+    description: Option<(usize, usize, Result<String>)>,
 }
 
 mod aoc_api_impl;

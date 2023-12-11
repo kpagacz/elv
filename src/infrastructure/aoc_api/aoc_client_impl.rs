@@ -1,15 +1,21 @@
 use super::{AocApi, AOC_URL};
-use crate::domain::{
-    ports::{aoc_client::AocClient, errors::AocClientError},
-    riddle_part::RiddlePart,
-    submission::Submission,
-    submission_result::SubmissionResult,
-    submission_status::SubmissionStatus,
+use crate::{
+    domain::{
+        ports::{aoc_client::AocClient, errors::AocClientError},
+        riddle_part::RiddlePart,
+        submission::Submission,
+        submission_result::SubmissionResult,
+        submission_status::SubmissionStatus,
+    },
+    infrastructure::http_description::HttpDescription,
 };
+use anyhow::{Context, Result};
 use reqwest::header::{CONTENT_TYPE, ORIGIN};
 use std::io::Read;
 
 impl AocClient for AocApi {
+    type Desc = HttpDescription;
+
     fn submit_answer(&self, submission: Submission) -> Result<SubmissionResult, AocClientError> {
         let url = reqwest::Url::parse(&format!(
             "{}/{}/day/{}/answer",
@@ -77,17 +83,13 @@ impl AocClient for AocApi {
 
     /// Queries the Advent of Code website for the description of a riddle
     /// for a given day and year and returns it as a formatted string.
-    fn get_description<HttpDescription: std::convert::TryFrom<reqwest::blocking::Response>>(
-        &self,
-        year: usize,
-        day: usize,
-    ) -> Result<HttpDescription, AocClientError> {
+    fn get_description(&self, year: usize, day: usize) -> Result<HttpDescription> {
         let url = reqwest::Url::parse(&format!("{}/{}/day/{}", AOC_URL, year, day))?;
         self.http_client
             .get(url)
             .send()?
             .try_into()
-            .map_err(|_e| AocClientError::GetDescriptionError)
+            .context("Failed to get the description")
     }
 }
 

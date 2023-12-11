@@ -9,6 +9,7 @@ impl AocApi {
         Self {
             http_client,
             configuration,
+            description: None,
         }
     }
 
@@ -55,7 +56,7 @@ impl AocApi {
         scraper::Selector::parse("main > article > p").unwrap()
     }
 
-    pub fn parse_submission_answer_body(self: &Self, body: &str) -> Result<String, anyhow::Error> {
+    pub fn parse_submission_answer_body(&self, body: &str) -> Result<String, anyhow::Error> {
         let document = scraper::Html::parse_document(body);
         let answer = document
             .select(&Self::get_aoc_answer_selector())
