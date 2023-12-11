@@ -29,7 +29,7 @@ impl HttpDescription {
         let part_one_selector = scraper::Selector::parse(".day-desc").unwrap();
         let binding = scraper::Html::parse_document(&self.body);
         let select = binding.select(&part_one_selector);
-        select.map(|e| e.inner_html()).skip(1).next()
+        select.map(|e| e.inner_html()).nth(1)
     }
 
     pub fn part_two_answer(&self) -> Option<String> {
@@ -39,8 +39,7 @@ impl HttpDescription {
             .select(&part_one_answer_selector)
             .map(|e| e.inner_html())
             .filter(|html| html.starts_with("Your puzzle answer was"))
-            .skip(1)
-            .next()
+            .nth(1)
     }
 }
 
@@ -50,7 +49,7 @@ impl TryFrom<reqwest::blocking::Response> for HttpDescription {
     fn try_from(
         http_response: reqwest::blocking::Response,
     ) -> Result<HttpDescription, anyhow::Error> {
-        if http_response.status().is_success() == false {
+        if !http_response.status().is_success() {
             anyhow::bail!("AoC server responded with an error".to_owned());
         }
 
@@ -95,8 +94,7 @@ impl std::fmt::Display for HttpDescription {
             self.part_two_answer(),
         ]
         .iter()
-        .filter(|part| part.is_some())
-        .map(|part| part.as_deref().unwrap())
+        .filter_map(|part| part.as_deref())
         .collect::<Vec<_>>()
         .join("\n");
 
@@ -117,8 +115,7 @@ impl CliDisplay for HttpDescription {
             self.part_two_answer(),
         ]
         .iter()
-        .filter(|part| part.is_some())
-        .map(|part| part.as_deref().unwrap())
+        .filter_map(|part| part.as_deref())
         .collect::<Vec<_>>()
         .join("\n");
         html2text::from_read_with_decorator(

@@ -73,21 +73,18 @@ impl ElvCli {
             let (year, day) = match determine_date(riddle_args) {
                 Ok(res) => res,
                 Err(e) => {
-                    eprintln!("❌ {}", e.to_string());
+                    eprintln!("❌ {e:#}");
                     return;
                 }
             };
             if part.is_none() {
-                part = Some(
-                    driver
-                        .guess_riddle_part(year, day)
-                        .context("❌ Could not guess the riddle part. Provide it manually as an argument")
-                        .unwrap(),
-                );
+                part = Some(driver.guess_riddle_part(year, day).context(
+                    "❌ Could not guess the riddle part. Provide it manually as an argument",
+                ).unwrap());
             }
             match driver.submit_answer(year, day, part.unwrap(), answer) {
                 Ok(_) => {}
-                Err(e) => eprint!("❌ Failed to submit the answer. {}", e.to_string()),
+                Err(e) => eprint!("❌ Failed to submit the answer. {e:#}"),
             }
         }
 
@@ -102,22 +99,27 @@ impl ElvCli {
             let (year, day) = match determine_date(riddle_args) {
                 Ok(res) => res,
                 Err(e) => {
-                    eprintln!("❌ {}", e.to_string());
+                    eprintln!("❌ {e:#}");
                     return;
                 }
             };
             match driver.input(year, day) {
                 Ok(input) => {
                     if print {
-                        println!("{}", input);
+                        println!("{input}");
                     }
                     if !no_file {
                         if let Some(parent) = out.parent() {
-                            std::fs::create_dir_all(parent).expect(
-                            format!("Failed to create the directory {}\nYou can still get the input if you print it with the --print flag",
-                            out.to_str().unwrap())
-                                .as_str()
-                        );
+                            match std::fs::create_dir_all(parent) {
+                                Ok(()) => {}
+                                Err(_) => {
+                                    panic!(
+                                    "Failed to create the directory {}\n \
+                                    You can still get the input if you print it with the --print flag", 
+                                    out.to_str().unwrap()
+                                );
+                                }
+                            }
                         }
 
                         let mut file = std::fs::File::create(&out).expect(
@@ -134,7 +136,7 @@ impl ElvCli {
                         }
                     }
                 }
-                Err(e) => eprintln!("❌ Error when getting the input:\n\t{}", e.to_string()),
+                Err(e) => eprintln!("❌ Error when getting the input:\n\t{:#}", e),
             }
         }
 
@@ -147,20 +149,20 @@ impl ElvCli {
             let (year, day) = match determine_date(riddle_args) {
                 Ok(res) => res,
                 Err(e) => {
-                    eprintln!("❌ {}", e.to_string());
+                    eprintln!("❌ {e:#}");
                     return;
                 }
             };
             match driver.get_description(year, day) {
                 Ok(description) => println!("{}", description),
-                Err(e) => eprintln!("Error when getting the description: {}", e.to_string()),
+                Err(e) => eprintln!("Error when getting the description: {e:#}"),
             }
         }
         fn handle_clear_cache_command() {
             let driver = get_driver(None, None);
             match driver.clear_cache() {
                 Ok(_) => eprintln!("✅ Cache cleared"),
-                Err(e) => panic!("❌ error when clearing cache: {}", e.to_string()),
+                Err(e) => panic!("❌ error when clearing cache: {e:#}"),
             }
         }
 
@@ -172,7 +174,7 @@ impl ElvCli {
                         println!("{}: {}", name, path);
                     }
                 }
-                Err(e) => eprintln!("❌ Error when listing the directories: {}", e.to_string()),
+                Err(e) => eprintln!("❌ Error when listing the directories: {e:#}"),
             }
         }
 
@@ -180,7 +182,7 @@ impl ElvCli {
             let driver = get_driver(Some(token_args), None);
             match driver.get_leaderboard(year.unwrap_or_else(determine_year)) {
                 Ok(text) => println!("{text}"),
-                Err(e) => eprintln!("❌ Error when getting the leaderboards: {}", e.to_string()),
+                Err(e) => eprintln!("❌ Error when getting the leaderboards: {e:#}"),
             }
         }
 
@@ -190,7 +192,7 @@ impl ElvCli {
             year: Option<i32>,
         ) {
             let driver = get_driver(Some(token_args), None);
-            let year = year.unwrap_or_else(|| determine_year());
+            let year = year.unwrap_or_else(determine_year);
             match driver.get_private_leaderboard(leaderboard_id, year) {
                 Ok(private_leaderboard) => {
                     println!("{}", private_leaderboard.cli_fmt(&driver.configuration))
@@ -203,7 +205,7 @@ impl ElvCli {
             let driver = get_driver(None, None);
             match driver.get_stars(year.unwrap_or_else(determine_year)) {
                 Ok(stars) => println!("{}", stars),
-                Err(e) => eprintln!("❌ Failure: {:#}", e),
+                Err(e) => eprintln!("❌ Failure: {e:#}"),
             }
         }
 
@@ -212,14 +214,14 @@ impl ElvCli {
                 Ok(map) => map
                     .iter()
                     .for_each(|(key, value)| println!("{} {}", key, value)),
-                Err(e) => eprintln!("❌ {}", e.to_string()),
+                Err(e) => eprintln!("❌ {e:#}"),
             }
         }
 
         fn handle_set_config(key: &str, value: String) {
             match Driver::set_config_key(key, value) {
                 Ok(_) => println!("✅ Key {key} successfully updated"),
-                Err(e) => eprintln!("❌ Failure: {}", e.to_string()),
+                Err(e) => eprintln!("❌ Failure: {e:#}"),
             }
         }
 
@@ -263,10 +265,7 @@ impl ElvCli {
             }
 
             config_builder = config_builder
-                .set_override_option(
-                    "cli.output_width",
-                    terminal_width.and_then(|width| Some(width as u32)),
-                )
+                .set_override_option("cli.output_width", terminal_width.map(|width| width as u32))
                 .expect("❌ Failed to set the cli output width");
 
             config_builder
