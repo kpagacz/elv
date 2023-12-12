@@ -5,14 +5,15 @@ use crate::domain::ports::get_input::GetInput;
 use anyhow::{Context, Result};
 
 impl GetInput for AocApi {
-    fn get_input(&self, day: usize, year: usize) -> Result<String> {
+    fn get_input(&mut self, day: usize, year: usize) -> Result<String> {
         let url = reqwest::Url::parse(&format!("{}/{}/day/{}/input", AOC_URL, year, day)).context(
             format!(
                 "Failed to parse the url: {}/{}/day/{}/input",
                 AOC_URL, year, day
             ),
         )?;
-        self.http_client
+        let description = self
+            .http_client
             .get(url)
             .send()
             .context(
@@ -32,6 +33,10 @@ impl GetInput for AocApi {
                     anyhow::bail!("You have to wait for the input to be available");
                 }
                 Ok(body)
-            })
+            });
+        if let Ok(text) = &description {
+            self.description = Some((day, year, text.clone()));
+        }
+        description
     }
 }
