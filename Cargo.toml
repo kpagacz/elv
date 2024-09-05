@@ -9,7 +9,7 @@ readme = "README.md"
 license-file = "LICENSE"
 homepage = "https://github.com/kpagacz/elv"
 repository = "https://github.com/kpagacz/elv"
-keywords = ["adventofcode", "aoc", "cli", "cache", "rust"]
+keywords = ["advent", "adventofcode", "aoc", "cli"]
 categories = ["command-line-utilities"]
 
 [[bin]]
