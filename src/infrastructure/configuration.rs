@@ -124,10 +124,28 @@ impl Configuration {
 
     fn write_to_file(self) -> Result<(), ConfigurationError> {
         let toml_string = toml::to_string(&self)?;
-        std::fs::write(
-            Self::get_project_directories().config_dir().join(".config"),
-            toml_string,
-        )?;
+        let project_dirs = Self::get_project_directories();
+        let config_dir = project_dirs.config_dir();
+        std::fs::create_dir_all(config_dir)?;
+        std::fs::write(config_dir.join(".config"), toml_string)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The default configuration should be writable when the project dir doesn't exist yet.
+    #[test]
+    fn write_default_configuration_before_project_dir_exists() {
+        let project_dirs = Configuration::get_project_directories();
+        let config_dir = project_dirs.config_dir();
+        std::fs::remove_dir_all(config_dir).ok();
+        assert!(!config_dir.exists()); // sanity check
+
+        let result = Configuration::default().write_to_file();
+        assert!(result.is_ok());
+        assert!(config_dir.exists());
     }
 }
