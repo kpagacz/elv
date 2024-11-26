@@ -124,10 +124,10 @@ impl Configuration {
 
     fn write_to_file(self) -> Result<(), ConfigurationError> {
         let toml_string = toml::to_string(&self)?;
-        std::fs::write(
-            Self::get_project_directories().config_dir().join(".config"),
-            toml_string,
-        )?;
+        let project_dirs = Self::get_project_directories();
+        let config_dir = project_dirs.config_dir();
+        std::fs::create_dir_all(config_dir)?;
+        std::fs::write(config_dir.join(".config"), toml_string)?;
         Ok(())
     }
 }
