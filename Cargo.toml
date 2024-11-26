@@ -2,7 +2,7 @@
 [package]
 name = "elv"
 description = "A little CLI helper for Advent of Code. 🎄"
-version = "0.13.4"
+version = "0.13.5"
 authors = ["Konrad Pagacz <konrad.pagacz@gmail.com>"]
 edition = "2021"
 readme = "README.md"
