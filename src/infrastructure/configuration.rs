@@ -131,3 +131,19 @@ impl Configuration {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The default configuration should be writable when the project dir doesn't exist yet.
+    #[test]
+    fn write_default_configuration_before_project_dir_exists() {
+        let project_dirs = Configuration::get_project_directories();
+        let config_dir = project_dirs.config_dir();
+        std::fs::remove_dir_all(config_dir).ok();
+        let result =  Configuration::default().write_to_file();
+        assert!(result.is_ok());
+        assert!(config_dir.exists());
+    }
+}
